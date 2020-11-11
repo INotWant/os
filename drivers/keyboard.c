@@ -1,8 +1,9 @@
 #include "keyboard.h"
-#include "isr.h"
-#include "ports.h"
 #include "screen.h"
+#include "../cpu/isr.h"
+#include "../cpu/ports.h"
 #include "../libc/utils.h"
+#include "../libc/string.h"
 #include "../kernel/kernel.h"
 
 #define BACKSPACE 0x0E

@@ -2,6 +2,7 @@
 #include "idt.h"
 #include "ports.h"
 #include "../drivers/screen.h"
+#include "../drivers/keyboard.h"
 #include "../libc/string.h"
 
 
@@ -130,10 +131,7 @@ void isr_handler(registers_t r) {
     kprint("\n");
 }
 
-/**
- * 处理外中断的初始逻辑（执行分派）
- */
-static void irq_handler(registers_t r) {
+void irq_handler(registers_t r) {
     // 收到中断后，必须向 PICs 发送 EOI，否则无法收到后续中断
     if (r.int_no >= 40) {
         port_byte_out(0xA0, 0x20); /* slave */

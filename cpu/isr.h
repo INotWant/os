@@ -100,6 +100,11 @@ void irq_install();
 void isr_handler(registers_t r);
 
 /**
+ * 处理外中断的初始逻辑（执行分派）
+ */
+void irq_handler(registers_t r);
+
+/**
  * 修改外中断的操作函数
  */
 void update_interrupt_handler(uint8_t n, isr_t handler);

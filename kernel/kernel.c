@@ -4,7 +4,7 @@
 #include "../libc/string.h"
 
 void kernel_main() {
-    isr_install();
+    interrupt_install();
     irq_install();
 
     kprint("Type something, it will go through the kernel.\n"

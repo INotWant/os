@@ -43,8 +43,8 @@ load_kernel:
     ret
 
 [bits 32]
-BEGIN_PM：
-    move ebx, MSG_PROT_MODE
+BEGIN_PM:
+    mov ebx, MSG_PROT_MODE
     call print_string_pm
     call KERNEL_OFFSET      ; 运行内核
     jmp $
