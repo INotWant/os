@@ -12,8 +12,8 @@ gdt_code:       ; 代码段，8字节
     dw 0xffff   ; 段长度，bits 0-15
     dw 0x0      ; 段基址，bits 0-15
     db 0x0      ; 段基址，bits 16-23
-    db 10011010b; 标志（8bits）-> 
-    db 11001111b; 标志（4bits）+ 段长度（bits 16-19）
+    db 10011010b; 标志（8bits）
+    db 11001111b; 标志（4bits）+ 段长度（bits 16-19）--> 第一个标志 G=1 表段边界的单位是 4 KB
     db 0x0      ; 段基址，bits 24-31
 
 gdt_data:       ; 数据段，8字节
