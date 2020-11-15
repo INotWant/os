@@ -10,6 +10,6 @@
 /** 为避免编译器 'unused parameter' 警告 **/
 #define UNUSED(x) (void)(x)
 
-
+#define MAX(x, y) ((x) > (y) ? (x) : (y))
 
 #endif
