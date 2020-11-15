@@ -28,6 +28,8 @@ print_string_pm_loop:
     add ebx, 1              ; next char
     add edx, 2              ; next video memory position
 
+    jmp print_string_pm_loop
+
 print_string_pm_done:
     popa
     ret
