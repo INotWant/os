@@ -28,13 +28,16 @@ void memory_init() {
     mem_start = (char *)START_MEMORY_ADDRESS;
     mem_brk = (char *)START_MEMORY_ADDRESS;
     mem_max_addr = (char *)END_MEMORY_ADDRESS;  /* 使得最后一字永不可用 */
+    last_chunk_point = 0;
+    for(int i = 0; i < 10; i++)
+        free_chunk_points[i] = 0;
 }
 
 // 获取所申请内存大小位于空闲链表数组的档次
 static uint8_t compute_memory_level(size_t size) {
     uint8_t level = 0;
     uint32_t acc = 12;
-    while (size > acc) {
+    while (size > acc && level < 9) {
         acc = 2 * acc - 4;
         ++level;
     }
@@ -102,10 +105,10 @@ static void insert_free_chunks(uint32_t *chunk_point) {
     uint32_t *root = free_chunk_points[level];
 
     free_chunk_points[level] = chunk_point;
-    PUT(PREP_FROM_HDRP(chunk_point), 0);
-    PUT(SUCCP_FROM_HDRP(chunk_point), root);
+    PUT(chunk_point + 1, 0);        /* 设置 pre 指针内容 */
+    PUT(chunk_point + 2, root);     /* 设置 succ 指针内容 */
     if (root != 0) 
-        PUT(PREP_FROM_HDRP(root), chunk_point);
+        PUT(root + 1, chunk_point);
 }
 
 // 分割 --> 把一整块都分配出去造成浪费，故把整块分成两块（分配块+剩余块）。最后返回指向剩余块的指针
@@ -158,6 +161,9 @@ void *memory_malloc(size_t size) {
             uint32_t *remain_chunk_point = segment(appro_fcp, remain_chunk_size);
             /* 把剩余块插入合适的空闲链表 */
             insert_free_chunks(remain_chunk_point);
+            /* 维护 last_chunk_point */
+            if (appro_fcp == last_chunk_point)
+                last_chunk_point = remain_chunk_point;
         } else {
             return_chunk_size = appro_chunk_size;
             /* 切断空闲链表 */
@@ -185,27 +191,35 @@ void memory_free(void *bp) {
         return;
 
     uint32_t *chunk_point = (uint32_t *)HDRP(bp);
-    uint32_t *prev_cp;
+    uint8_t flags = GET_PRE_ALLOC(chunk_point) ? 0x2 : 0x0;
+    uint32_t val = PACK(GET_SIZE(chunk_point), flags);
+    PUT(chunk_point, val);                  /* 设置头部 */
+    PUT(FTRP_FROM_HDRP(chunk_point), val);  /* 设置脚部 */
+
     uint32_t *new_chunk_point = chunk_point;
-    uint8_t hasMerge = 0;   /* 是否存在合并 */
+    uint32_t *prev_cp;
     if (chunk_point != (uint32_t *)mem_start) { /* 非第一块 */
-        prev_cp = (uint32_t *)PREV_HDRP(bp);
-        if (!GET_ALLOC(prev_cp)) {          /* 且前一块未分配 */
-            hasMerge = 1;
+        if (!GET_PRE_ALLOC(chunk_point)) {          /* 且前一块未分配 */
+            prev_cp = (uint32_t *)PREV_HDRP(bp);
             /* 从空闲链表中删除前一块 */
             uint8_t level = compute_memory_level(GET_SIZE(prev_cp) - WSIZE);
             delete_free_chunks(&(free_chunk_points[level]), prev_cp);
             /* 合并 */
             new_chunk_point = prev_cp;
             new_chunk_point = merge(new_chunk_point, chunk_point);
+            /* 维护 last_chunk_point */
+            if (chunk_point == last_chunk_point)
+                last_chunk_point = new_chunk_point;
         }
     }
 
     uint32_t *next_cp = 0;
-    if (chunk_point != last_chunk_point) {      /* 非最后一块 */
+    if (chunk_point < last_chunk_point) {      /* 非最后一块 */
         next_cp = (uint32_t *) NEXT_HDRP(bp);
+        /* 先告诉下一块 “未分配” */
+        uint8_t flags = GET_ALLOC(next_cp) ? 0x1 : 0x0;
+        PUT(next_cp, PACK(GET_SIZE(next_cp), flags));
         if (!GET_ALLOC(next_cp)) {          /* 且后一块未分配 */
-            hasMerge = 1;
             /* 从空闲链表中删除后一块 */
             uint8_t level = compute_memory_level(GET_SIZE(next_cp) - WSIZE);
             delete_free_chunks(&(free_chunk_points[level]), next_cp);
@@ -217,6 +231,5 @@ void memory_free(void *bp) {
         }
     }
 
-    if (hasMerge)
-        insert_free_chunks(new_chunk_point);    /* 把合并得到的新块插入到恰当的空闲链表 */
+    insert_free_chunks(new_chunk_point);    /* 把新块（或为合并得到）插入到恰当的空闲链表 */
 }
