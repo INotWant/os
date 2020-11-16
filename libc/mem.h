@@ -73,47 +73,6 @@ void memory_set(uint8_t *dest, uint8_t val, size_t len);
 /** 内存管理的结束地址 **/
 #define END_MEMORY_ADDRESS 0xffffffff
 
-/** 单字 **/
-#define WSIZE 4
-/** 双字 **/
-#define DSIZE (WSIZE * 2)
-
-/** 把块大小和标志组合起放于头部 **/
-#define PACK(size, flags) ((size) | (flags))
-
-#define GET(p) (*(uint32_t *)(p))
-#define PUT(p, val) (*(uint32_t *)(p) = (uint32_t)val)
-
-/** 获取块大小 **/
-#define GET_SIZE(p) (GET(p) & ~0x7)
-/** 获取块可放最大负载的大小 **/
-#define GET_USABLE_SIZE(p) (GET_SIZE(p) - WSIZE)
-/** 获取头部标志 **/
-#define GET_FLAGS(p) (GET(p) & 0x7)
-/** 获取当前是否已分配 **/
-#define GET_ALLOC(p) (GET(p) & 0x1)
-/** 获取上一块是否已分配 **/
-#define GET_PRE_ALLOC(p) (GET(p) & 0x2)
-/** 设置标志位标识上一块已被分配 **/
-#define SET_PRE_ALLOCATED(p) PUT(p, PACK(GET_SIZE(p), ((*(uint32_t *)(p) & 0x7) | 0x2)))
-/** 设置标志位标识上一块未被分配 **/
-#define SET_PRE_UNALLOCATED(p) PUT(p, PACK(GET_SIZE(p), (*(uint32_t *)(p) & 0x5))
-
-/** 根据申请返回指针，求对应块的头部指针 **/
-#define HDRP(bp) ((char *)(bp) - WSIZE)
-/** 根据头部指针，求脚部指针 **/
-#define FTRP_FROM_HDRP(hp) ((char *)(hp) + GET_SIZE(hp) - WSIZE)
-
-/** 根据申请返回指针，求下一块的头部指针 **/
-#define NEXT_HDRP(bp) HDRP((char *)(bp) + GET_SIZE(HDRP(bp)))
-/** 根据申请返回指针，求上一块的头部指针 **/
-#define PREV_HDRP(bp) HDRP((char *)(bp) - GET_SIZE((char *)(bp) - DSIZE))
-
-/** 根据头部指针，求 pre 指针 **/
-#define PREP_FROM_HDRP(hp) ((uint32_t *)(*((uint32_t *)(hp) + 1)))
-/** 根据头部指针，求 succ 指针 **/
-#define SUCCP_FROM_HDRP(hp) ((uint32_t *)(*((uint32_t *)(hp) + 2)))
-
 /**
  * 初始化内存管理
  */
