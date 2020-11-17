@@ -3,6 +3,13 @@
 #include "../libc/mem.h"
 #include "../drivers/screen.h"
 
+#define WSIZE 4
+#define GET(p) (*(uint32_t *)(p))
+/** 获取块大小 **/
+#define GET_SIZE(p) (GET(p) & ~0x7)
+/** 根据申请返回指针，求对应块的头部指针 **/
+#define HDRP(bp) ((char *)(bp) - WSIZE)
+
 // 测试内存是否正常释放
 static void test1() {
     memory_init();
