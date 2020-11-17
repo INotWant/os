@@ -3,6 +3,7 @@
 #include "../drivers/screen.h"
 #include "../libc/string.h"
 #include "../libc/mem.h"
+#include "lisp/pair.h"
 
 #include "../test/test.h"
 
@@ -11,6 +12,7 @@ void kernel_main() {
     irq_install();
 
     memory_init();
+    pair_init();
 
     /* 调用所有测试 */
     test_main();
