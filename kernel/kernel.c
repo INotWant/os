@@ -4,6 +4,7 @@
 #include "../libc/string.h"
 #include "../libc/mem.h"
 #include "lisp/pair.h"
+#include "lisp/stack.h"
 
 #include "../test/test.h"
 
@@ -13,6 +14,7 @@ void kernel_main() {
 
     memory_init();
     pair_init();
+    stack_init();
 
     /* 调用所有测试 */
     test_main();
