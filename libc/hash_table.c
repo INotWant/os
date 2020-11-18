@@ -114,6 +114,7 @@ kv* hash_table_put(hash_table *htp, char *key, void *value) {
         htp->table[table_index] = kv_new(key, value);
         if (htp->table[table_index] == 0)
             return 0;
+        ret = htp->table[table_index];
     }else {
         kv *p_curr = htp->table[table_index];
         kv *p_pre;
