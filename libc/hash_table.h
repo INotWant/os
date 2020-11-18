@@ -39,13 +39,13 @@ void free_hash_table(hash_table *htp);
  * put 新 kv
  * @return: 返回 0 表 put 失败，非 0 表成功
  */
-uint8_t hash_table_put(hash_table *htp, char *key, void *value);
+kv* hash_table_put(hash_table *htp, char *key, void *value);
 
 /**
  * 根据 key 查找 value
  * @return: 返回 0 表未找到
  */
-void *hash_table_get(hash_table *htp, char *key);
+kv *hash_table_get(hash_table *htp, char *key);
 
 /**
  * 依据 key 删除对应键值对

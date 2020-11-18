@@ -9,12 +9,12 @@ static void test1() {
     char *key1 = "gao";
     void *val1 = (void *)1;
     hash_table_put(&ht, key1, val1);
-    void *val1_get = hash_table_get(&ht, key1);
-    assert_eq(val1, val1_get, "err: test1-1\n");
+    kv* kv = hash_table_get(&ht, key1);
+    assert_eq(val1, kv->val, "err: test1-1\n");
 
     hash_table_remove(&ht, key1);
-    val1_get = hash_table_get(&ht, key1);
-    assert_eq(val1_get, 0, "err: test2-1\n");
+    kv = hash_table_get(&ht, key1);
+    assert_eq(kv, 0, "err: test2-1\n");
     free_hash_table(&ht);
 }
 

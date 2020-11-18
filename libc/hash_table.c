@@ -106,9 +106,10 @@ static void rehash(hash_table *htp) {
     htp->table_size = new_table_size;
 }
 
-uint8_t hash_table_put(hash_table *htp, char *key, void *value) {
+kv* hash_table_put(hash_table *htp, char *key, void *value) {
     uint32_t hash = hash_function(key);
     int table_index = hash % htp->table_size;
+    kv *ret;
     if (htp->table[table_index] == 0) {
         htp->table[table_index] = kv_new(key, value);
         if (htp->table[table_index] == 0)
@@ -121,7 +122,8 @@ uint8_t hash_table_put(hash_table *htp, char *key, void *value) {
                 if (0 != htp->free_val_hf)
                     htp->free_val_hf(p_curr->val);
                 p_curr->val = value;
-                return 1;
+                ret = p_curr;
+                return ret;
             }
             p_pre = p_curr;
             p_curr = p_curr->p_next;
@@ -129,20 +131,21 @@ uint8_t hash_table_put(hash_table *htp, char *key, void *value) {
         p_pre->p_next = kv_new(key, value);
         if (p_pre->p_next == 0)
             return 0;
+        ret = p_pre->p_next;
     }
     htp->element_size += 1;
     if (htp->element_size > (size_t)(htp->table_size * LOAD_FACTOR))    /* 再哈希 */
         rehash(htp);
-    return 1;
+    return ret;
 }
 
-void *hash_table_get(hash_table *htp, char *key) {
+kv *hash_table_get(hash_table *htp, char *key) {
     uint32_t hash = hash_function(key);
     int table_index = hash % htp->table_size;
     kv *p_curr = htp->table[table_index];
     while (0 != p_curr) {
         if (strcmp(key, p_curr->key) == 0) 
-            return p_curr->val;
+            return p_curr;
         p_curr = p_curr->p_next;
     }
     return 0;
