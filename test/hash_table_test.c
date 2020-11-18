@@ -15,6 +15,7 @@ static void test1() {
     hash_table_remove(&ht, key1);
     val1_get = hash_table_get(&ht, key1);
     assert_eq(val1_get, 0, "err: test2-1\n");
+    free_hash_table(&ht);
 }
 
 void hash_table_test() {
