@@ -1,4 +1,5 @@
 #include "string.h"
+#include "hash_table.h"
 
 #include <stdint.h>
 
@@ -77,4 +78,26 @@ int strcmp(char s1[], char s2[]) {
             return 0;
     }
     return s1[i] - s2[i];
+}
+
+/** 使用哈希表实现 “字符串常量池” **/
+static hash_table ht_for_constant_pool;
+
+char *put_string_to_constant_pool(char *str) {
+    kv** table= ht_for_constant_pool.table;
+    if (table == 0)
+        new_hash_table(&ht_for_constant_pool, 0);
+    kv *kvp = hash_table_get(&ht_for_constant_pool, str);
+    if (kvp == 0) {
+        kvp = hash_table_put(&ht_for_constant_pool, str, 0);
+        return kvp == 0 ? 0 : kvp->key;
+    }
+    return kvp->key;
+}
+
+void remove_string_in_constant_pool(char *str) {
+    kv** table= ht_for_constant_pool.table;
+    if (table == 0)
+        return;
+    hash_table_remove(&ht_for_constant_pool, str);
 }
