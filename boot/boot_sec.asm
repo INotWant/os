@@ -9,10 +9,10 @@
 
 ;;; 代码
 [org 0x7c00] ; boot_loader 被映射至内存的 0x7c00 位置
-KERNEL_OFFSET equ 0x1000
+KERNEL_OFFSET equ 0x7e00
 
     mov [BOOT_DRIVE], dl
-    mov bp, 0x9000      ; 初始栈底指针（指向内存）--> base pointer
+    mov bp, 0x7000      ; 初始栈底指针（指向内存）--> base pointer
     mov sp, bp          ; 初始栈顶指针          --> stack pointer
 
     mov bx, MSG_REAL_MODE
@@ -37,7 +37,7 @@ load_kernel:
     call print_nl
 
     mov bx, KERNEL_OFFSET   ; 内核被加载至内存的偏移，在 disk_load 中以 bx 为准 
-    mov dh, 31              ; 被加载至内存的扇区数目，在 disk_load 中以 dh 为准
+    mov dh, 64              ; 被加载至内存的扇区数目，在 disk_load 中以 dh 为准
     mov dl, [BOOT_DRIVE]    ; 指定从哪个（哪种）存储设备加载，此值来自 BIOS 的 dl
     call disk_load
     ret
