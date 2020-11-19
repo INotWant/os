@@ -1,6 +1,9 @@
 #ifndef STRING_H
 #define STRING_H
 
+#include <stdint.h>
+#include <stddef.h>
+
 /** 整数转为字符串 **/
 void int_to_ascii(int n, char str[]);
 /** 把数值转为十六进制表示的字符串 **/
@@ -15,6 +18,18 @@ void backspace(char s[]);
 void append(char s[], char n);
 /** 字符串比较 **/
 int strcmp(char s1[], char s2[]);
+/** 判断字符是否是空白字符 **/
+int isspace(char c);
+/** 判断字符是否是数字 **/
+int is_digital(char c);
+/** 判断字符串是不是一个整数 **/
+uint8_t is_integer(char *str, size_t len);
+/** 判断字符串是不是浮点数 **/
+uint8_t is_float(char *str, size_t len);
+/** 字符串转为整数 **/
+int32_t str2int32(char *str, size_t len);
+/** 字符串转为浮点数 **/
+float str2float(char *str, size_t len);
 
 /**
  * 把字符串放入“字符串常量池”

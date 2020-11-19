@@ -4,6 +4,7 @@
 #include "stack_test.h"
 #include "hash_table_test.h"
 #include "string_test.h"
+#include "input_test.h"
 
 void test_main() {
     /* 有关内存管理的测试 */
@@ -16,4 +17,6 @@ void test_main() {
     hash_table_test();
     /* 有关字符串的测试 */
     string_test();
+    /* 有关 input 的测试 */
+    input_test();
 }

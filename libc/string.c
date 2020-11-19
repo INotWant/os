@@ -80,6 +80,87 @@ int strcmp(char s1[], char s2[]) {
     return s1[i] - s2[i];
 }
 
+int isspace(char c) {
+    if (c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' || c == '\r')
+        return 1;
+    return 0;
+}
+
+int is_digital(char c) {
+    if (c >= '0' && c <= '9')
+        return 1;
+    return 0;
+}
+
+uint8_t is_integer(char *str, size_t len) {
+    size_t i = 0;
+    if (str[i] == '-')
+        ++i;
+    while (i < len)
+        if (!is_digital(str[i++]))
+            return 0;
+    return 1;
+}
+
+uint8_t is_float(char *str, size_t len) {
+    size_t i = 0;
+    if (str[i] == '-')
+        ++i;
+    uint8_t has_decimal_point = 0;
+    while (i < len) {
+        char c = str[i++];
+        if (c == '.') {
+            if (has_decimal_point == 0)
+                has_decimal_point = 1;
+            else
+                return 0;
+        } else if (!is_digital(c))
+            return 0;
+    }
+    return 1;
+}
+
+int32_t str2int32(char *str, size_t len) {
+    if (len == 0)
+        return 0;
+    int64_t ret = 0;
+    int8_t flag = 1;
+    size_t i = 0;
+    if (str[i] == '-') {
+        ++i;
+        flag = -1;
+    }
+    while (i < len) {
+        char c = str[i++];
+        ret = ret * 10 + (c - '0');
+    }
+    return (int32_t)(ret * flag);
+}
+
+float str2float(char *str, size_t len) {
+    float ret = 0.0f;
+    if (len == 0)
+        return ret;
+    size_t i = 0;
+    size_t decimal_point_pos = 0;
+    while(i < len) {
+        if (str[i++] == '.'){
+            decimal_point_pos = i - 1;
+            break;
+        }
+    }
+    ret = str2int32(str, decimal_point_pos);
+    size_t decimal_len = len - decimal_point_pos - 1;
+    float mid = 1.0;
+    for (size_t i = 0; i < decimal_len; i++)
+        mid *= 10;
+    if (str[0] == '-')
+        ret -= (str2int32(str + decimal_point_pos + 1, decimal_len) / mid);
+    else
+        ret += (str2int32(str + decimal_point_pos + 1, decimal_len) / mid);
+    return ret;
+}
+
 /** 使用哈希表实现 “字符串常量池” **/
 static hash_table ht_for_constant_pool;
 
