@@ -1,5 +1,6 @@
 #include "pair.h"
 #include "../../libc/mem.h"
+#include "../../libc/string.h"
 #include <stddef.h>
 
 /** 每个元素所占存储空间 **/
@@ -168,4 +169,44 @@ void set_car(void *pair_point, element_t *element_point) {
 
 void set_cdr(void *pair_point, element_t *element_point) {
     assign_ep(GET_CDR_EP(pair_point), element_point);
+}
+
+element_t construct_integer_element(int32_t val) {
+    element_t element;
+    element.type = INTEGER_T;
+    element.val.ival = val;
+    return element;
+}
+
+element_t construct_float_element(float val) {
+    element_t element;
+    element.type = FLOAT_T;
+    element.val.fval = val;
+    return element;
+}
+
+element_t construct_string_element(char *str) {
+    size_t str_len = strlen(str) + 1;  /* key 字符串总长度（含结束符） */
+    element_t element;
+    if (str_len <= 7) {
+        element.type = STRING_SHORT_T;
+        memory_copy((uint8_t *)str, (uint8_t *)element.val.short_string, str_len);
+    } else {
+        element.type = STRING_LONG_T;
+        element.val.point = put_string_to_constant_pool(str);
+    }
+    return element;
+}
+
+element_t construct_point_element(void *point) {
+    element_t element;
+    element.type = POINT_PAIR_T;
+    element.val.point = point;
+    return element;
+}
+
+element_t construct_non_exist_element() {
+    element_t element;
+    element.type = NON_EXIST;
+    return element;
 }

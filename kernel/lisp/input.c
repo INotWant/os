@@ -46,16 +46,14 @@ int is_legal(char *str, size_t len) {
 }
 
 static element_t constructe_element(char *substr, size_t substr_len, uint8_t is_arrive_end) {
-    element_t element;
     if (is_integer(substr, substr_len)) {      /* 整数 */
         int32_t num = str2int32(substr, substr_len);
-        element.type = INTEGER_T;
-        element.val.ival = num;
+        return construct_integer_element(num);
     } else if (is_float(substr, substr_len)) { /* 浮点数 */
         float num = str2float(substr, substr_len);
-        element.type = FLOAT_T;
-        element.val.fval = num;
+        return construct_float_element(num);
     } else {                                /* 字符串 */
+        element_t element;
         if (substr_len + 1 <= 7) {  /* 字符串放于序对中 */
             element.type = STRING_SHORT_T;
             memory_copy((uint8_t *)substr, (uint8_t *)element.val.short_string, substr_len);
@@ -75,17 +73,15 @@ static element_t constructe_element(char *substr, size_t substr_len, uint8_t is_
                 substr[substr_len] = tmp;
             }
         }
+        return element;
     }
-    return element;
 }
 
 static void conn_pair(void **ret_p, void **last_pair_pp, void *new_pair_p) {
     if (*ret_p == 0) {
         *ret_p = new_pair_p;
     } else {
-        element_t conn_element;
-        conn_element.type = POINT_PAIR_T;
-        conn_element.val.point = new_pair_p;
+        element_t conn_element = construct_point_element(new_pair_p);
         set_cdr(*last_pair_pp, &conn_element);
     }
     *last_pair_pp = new_pair_p;
@@ -98,10 +94,7 @@ static void *save_str_to_pair_helper(char *str, size_t start, size_t end) {
     if (i - 1 == end)   /* 去除空白字符为空串 */
         return 0;       /* 表空表 */
 
-    element_t end_element;
-    end_element.type = POINT_PAIR_T;
-    end_element.val.point = 0;
-
+    element_t end_element = construct_point_element(0);
     if (str[i] != '(') {    /* 字母 or 数字 */
         size_t substr_len = 0;
         char *substr = str + i;
@@ -137,9 +130,7 @@ static void *save_str_to_pair_helper(char *str, size_t start, size_t end) {
                     }
                     ++i;
                 }
-                element_t element;
-                element.type = POINT_PAIR_T;
-                element.val.point = save_str_to_pair_helper(str, new_start, i);
+                element_t element = construct_point_element(save_str_to_pair_helper(str, new_start, i));
                 void *new_pair_p = cons(&element, &end_element);
                 conn_pair(&ret, &last_pair_p, new_pair_p);
                 ++i;

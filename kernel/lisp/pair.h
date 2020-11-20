@@ -125,4 +125,30 @@ void set_car(void *pair_point, element_t *element_point);
  */
 void set_cdr(void *pair_point, element_t *element_point);
 
+/**
+ * 构建表述整型的 element_t
+ */
+element_t construct_integer_element(int32_t val);
+
+/**
+ * 构建表述浮点型的 element_t
+ */
+element_t construct_float_element(float val);
+
+
+/**
+ * 构建表述字符串的 element_t
+ */
+element_t construct_string_element(char *str);
+
+/**
+ * 构建表述指针的 element_t
+ */
+element_t construct_point_element(void *point);
+
+/**
+ * 构建表述非存在元素的 element_t
+ */
+element_t construct_non_exist_element();
+
 #endif
