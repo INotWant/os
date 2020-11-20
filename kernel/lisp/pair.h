@@ -66,6 +66,7 @@
 #define STRING_SHORT_T  0x2   /* 短字符串 */
 #define STRING_LONG_T   0x3   /* 长字符串 */
 #define POINT_PAIR_T    0x4   /* 指针 */
+#define NON_EXIST       0xe   /* 表不存在的元素 */
 #define BROKEN_HEART_T  0xf   /* 破碎的心，用于 GC */
 
 /** 序对中元素（类型 + 值） **/

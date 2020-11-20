@@ -18,8 +18,7 @@ uint8_t push(element_t *element_point) {
 element_t pop() {
     element_t element;
     if (stack_top_point == 0){
-        element.type = POINT_PAIR_T;
-        element.val.point = 0;
+        element.type = NON_EXIST;
         return element;
     }
     element = car(stack_top_point);
