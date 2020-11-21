@@ -118,7 +118,7 @@ static void *extend(size_t size){
     PUT(hp, PACK(extend_size, flags));
     PUT(hp + 1, last_chunk_point);
     PUT(hp + 2, 0);
-    if (last_chunk_point != 0)
+    if (last_chunk_point != 0 && !GET_ALLOC(last_chunk_point))
         PUT(last_chunk_point + 2, hp);
 
     last_chunk_point = hp;
