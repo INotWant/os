@@ -5,6 +5,7 @@
 #include "hash_table_test.h"
 #include "string_test.h"
 #include "input_test.h"
+#include "env_test.h"
 
 void test_main() {
     /* 有关内存管理的测试 */
@@ -19,4 +20,6 @@ void test_main() {
     string_test();
     /* 有关 input 的测试 */
     input_test();
+    /* 有关 env 的测试 */
+    env_test();
 }
