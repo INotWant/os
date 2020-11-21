@@ -1,5 +1,5 @@
-#ifndef TOOLS
-#define TOOLS
+#ifndef TOOLS_H
+#define TOOLS_H
 
 #include "stdint.h"
 #include "../drivers/screen.h"

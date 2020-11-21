@@ -50,8 +50,8 @@
  * 注：序对实现在 内存管理 之上
  */
 
-#ifndef PAIR
-#define PAIR
+#ifndef PAIR_H
+#define PAIR_H
 
 #include <stdint.h>
 

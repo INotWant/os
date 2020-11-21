@@ -25,9 +25,6 @@
 
 #include "pair.h"
 
-/** 栈顶指针 **/
-void *stack_top_point;
-
 /**
  * 初始化栈
  */

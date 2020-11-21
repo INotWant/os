@@ -1,5 +1,8 @@
 #include "stack.h"
 
+/** 栈顶指针 **/
+void *stack_top_point;
+
 void stack_init() {
     stack_top_point = 0;
 }
