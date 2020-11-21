@@ -37,7 +37,7 @@ debug: os-image.bin kernel.elf
 
 clean:
 	rm -rf *.bin *.dis *.o os-image.bin *.elf
-	rm -rf kernel/*.o boot/*.bin drivers/*.o boot/*.o cpu/*.o libc/*.o
+	rm -rf kernel/*.o boot/*.bin drivers/*.o boot/*.o cpu/*.o libc/*.o test/*.o
 
 stop:
 	ps | grep qemu-system-i386 | sed  '/grep/d' | awk '{print $$1}' | xargs kill
