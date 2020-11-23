@@ -176,7 +176,6 @@ element_t construct_float_element(float val) {
 }
 
 element_t construct_string_element(char *str) {
-    size_t str_len = strlen(str) + 1;  /* key 字符串总长度（含结束符） */
     element_t element;
     element.type = STRING_T;
     element.val.point = put_string_to_constant_pool(str);
