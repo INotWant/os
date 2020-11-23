@@ -5,8 +5,6 @@
 #define GET_NEXT_PAIR_POINT(pp) (cdr(pp).val.point)
 #define GET_VAR_NAME_POINT(ep) (char *)((ep)->val.point)
 
-void *env_top_point = 0;    /* 环境头指针，即指向最新创建的框架 */
-
 // 从框架中查找某约束（键值对）
 static void *lookup_kv_form_frame(void *frame_point, char *var_name) {
     void *p = frame_point;
@@ -30,8 +28,8 @@ static element_t lookup_variable_value_form_frame(void *frame_point, char *var_n
         return cdr(p);
 }
 
-element_t lookup_variable_value(char *var_name) {
-    void *p = env_top_point;
+element_t lookup_variable_value(char *var_name, void *env) {
+    void *p = env;
     while (p != 0) {
         void *frame_point = car(p).val.point;
         element_t element = lookup_variable_value_form_frame(frame_point, var_name);
@@ -49,7 +47,7 @@ static void *insert_kv_to_frame(void *frame_point, void *kv_point) {
     return cons(&car_element, &cdr_element);
 }
 
-void *extend_env(void *var_names, void *values) {
+void *extend_env(void *var_names, void *values, void *last_env) {
     void *var_name_p = var_names;
     void *value_p = values;
     void *frame_point = 0;
@@ -63,18 +61,17 @@ void *extend_env(void *var_names, void *values) {
         value_p = GET_NEXT_PAIR_POINT(value_p);
     }
     if (frame_point == 0)   /* var_names or values 为空表 */
-        return env_top_point;
+        return last_env;
     else {
         element_t car_ele = construct_point_element(frame_point);
-        element_t cdr_ele = construct_point_element(env_top_point);
-        env_top_point = cons(&car_ele, &cdr_ele);
-        return env_top_point;
+        element_t cdr_ele = construct_point_element(last_env);
+        return cons(&car_ele, &cdr_ele);
     }
 }
 
-void define_var(char *var_name, element_t *value_p) {
-    if (env_top_point != 0) {
-        void *frame_point = car(env_top_point).val.point;
+void define_var(char *var_name, element_t *value_p, void *env) {
+    if (env != 0) {
+        void *frame_point = car(env).val.point;
         void *kv_point = lookup_kv_form_frame(frame_point, var_name);
         if (kv_point != 0) {    /* 原本存在则覆盖 */
             set_cdr(kv_point, value_p);
@@ -83,13 +80,13 @@ void define_var(char *var_name, element_t *value_p) {
             kv_point = cons(&key_element, value_p);
             frame_point = insert_kv_to_frame(frame_point, kv_point);
             element_t car_element = construct_point_element(frame_point);
-            set_car(env_top_point, &car_element);      
+            set_car(env, &car_element);      
         }  
     }
 }
 
-uint8_t set_var_value(char *var_name, element_t *value_p) {
-    void *p = env_top_point;
+uint8_t set_var_value(char *var_name, element_t *value_p, void *env) {
+    void *p = env;
     while (p != 0) {
         void *frame_point = car(p).val.point;
         void *kv_point = lookup_kv_form_frame(frame_point, var_name);

@@ -11,7 +11,7 @@
  * 
  * 实现原理图示：
  * 
- * env_top_point
+ *   env
  *    |
  *    v
  *  +-+-+---+   +---+---+
@@ -34,31 +34,35 @@
 /**
  * 查找指定变量（约束）在环境中的值
  * @param: var_name --> 变量名
+ * @param: env      --> 当前环境指针
  * @return: 相应值
  */
-element_t lookup_variable_value(char *var_name);
+element_t lookup_variable_value(char *var_name, void *env);
 
 /**
  * 扩展环境
  * @param: vars     --> 变量名表（用序对表示的表）
  * @param: values   --> 变量值表（用序对表示的表）
+ * @param: last_env --> 被扩展的环境指针
  * @return: 新的 env_top_point
  */
-void *extend_env(void *var_names, void *values);
+void *extend_env(void *var_names, void *values, void *last_env);
 
 /**
  * 在环境（最新的框架）中添加一新约束，若已存在则覆盖
  * @param: var_name --> 变量名
  * @param: value_p  --> 值指针
+ * @param: env      --> 当前环境指针
  */
-void define_var(char *var_name, element_t *value_p);
+void define_var(char *var_name, element_t *value_p, void *env);
 
 /**
  * 修改环境中指定约束
  * @param: var_name --> 变量名
  * @param: value_p  --> 值指针
+ * @param: env      --> 当前环境指针
  * @return: 若不存在 var_name 指定的变量则返回 0，成功则返回 1
  */
-uint8_t set_var_value(char *var_name, element_t *value_p);
+uint8_t set_var_value(char *var_name, element_t *value_p, void *env);
 
 #endif
