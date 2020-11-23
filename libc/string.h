@@ -19,9 +19,11 @@ void append(char s[], char n);
 /** 字符串比较 **/
 int strcmp(char s1[], char s2[]);
 /** 判断字符是否是空白字符 **/
-int isspace(char c);
+int is_space(char c);
 /** 判断字符是否是数字 **/
 int is_digital(char c);
+/** 判断字符是否是字母 **/
+int is_alphabet(char c);
 /** 判断字符串是不是一个整数 **/
 uint8_t is_integer(char *str, size_t len);
 /** 判断字符串是不是浮点数 **/

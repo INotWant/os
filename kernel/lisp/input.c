@@ -3,56 +3,116 @@
 #include "../../libc/string.h"
 #include "../../libc/mem.h"
 
+// 定位引号表达式。返回引号表达式的结束位置，若判定引号表达式格式存在问题则返回 -1
+static int locate_quote(char *str, size_t start, size_t len) {
+    size_t i = start + 1;
+    if (start == len)
+        return -1;
+    if (str[i] == '(') {    /* 针对 '() */
+        ++i;
+        if (i == len || str[i] != ')')
+            return -1;
+        return ++i;
+    }
+    while(i < len && (is_alphabet(str[i]) || is_digital(str[i])))
+        ++i;
+    return i;
+}
+
+// 定位字符串常量。返回字符串常量的结束位置，若判定字符串常量格式存在问题则返回 -1
+static int locate_string(char *str, size_t start, size_t len) {
+    size_t i = start + 1;
+    while (i < len && (str[i] != '"' || str[i - 1] == '\\'))
+        ++i;
+    if (i == len)
+        return -1;
+    return ++i;
+}
+
+// 定位符号或数字。返回符号或数字的结束位置
+static int locate_symbol_or_number(char *str, size_t start, size_t len) {
+    size_t i = start + 1;
+    while(i < len && (is_alphabet(str[i]) || is_digital(str[i]) || str[i] == '_'))
+        ++i;
+    return i;
+}
+
+static uint8_t is_quote_or_string_or_symbol_number_start(char c) {
+    if (c == '\'')
+        return 1;
+    if (c == '"')
+        return 1;
+    if (is_alphabet(c) || is_digital(c) || c == '_')
+        return 1;
+    return 0;
+}
+
+static int get_end_next(char *str, size_t start, size_t len) {
+    size_t i = start;
+    if (str[i] == '\'')
+        return locate_quote(str, i, len);
+    else if (str[i] == '"')
+        return locate_string(str, i, len);
+    else
+        return locate_symbol_or_number(str, i, len);
+}
+
 int is_legal(char *str, size_t len) {
     size_t i = 0;
-    while(i < len && isspace(str[i]))
+    while (i < len && is_space(str[i]))
         ++i;
     if (i == len)   /* 去除空白字符，得到空串 */
         return 0;
-
-    if (str[i] != '(') {        /* 以非左括号开始 */
-        uint8_t has_white_space = 0;
-        while(i < len) {
-            char c = str[i];
-            if (c == '(' || c == ')')
-                return -1;
-            if (has_white_space && !isspace(c))
-                return -1;
-            if (isspace(c))
-                has_white_space = 1;
+    if (is_quote_or_string_or_symbol_number_start(str[i])) {   /* 以 引号 双引号 符号 开始 */
+        int ret = get_end_next(str, i, len);
+        if (ret == -1)
+            return -1;
+        i = ret;
+        while (i < len && is_space(str[i]))
             ++i;
+        return i == len ? 0 : -1;
+    } else if (str[i] == '(') {                                 /* 以左括号开始 */
+        size_t brackets_num = 1;
+        ++i;
+        while(i < len) {
+            char c = str[i++];
+            if (is_space(c))
+                continue;
+            else if (c == '(')
+                ++brackets_num;
+            else if (c == ')') {
+                --brackets_num;
+                if (brackets_num == 0) {
+                    while(i < len && is_space(str[i]))      /* 涵盖了 < 0 的情况 */
+                        ++i;
+                    return i == len ? 0 : -1;
+                }
+            } else if (is_quote_or_string_or_symbol_number_start(c)) {
+                int ret = get_end_next(str, i - 1, len);
+                if (ret == -1)
+                    return -1;
+                i = ret;
+            } else                  /* 未知字符 */
+                return -1;
         }
-        return 0;
-    }
-
-    size_t brackets_num = 1;    /* 以左括号开始 */
-    ++i;
-    while(i < len) {
-        char c = str[i++];
-        if (isspace(c))
-            continue;
-        if (c == '(')
-            ++brackets_num;
-        else if(c == ')') {
-            --brackets_num;
-            if (brackets_num == 0) {
-                while(i < len && isspace(str[i]))
-                    ++i;
-                return i == len ? 0 : -1;
-            }
-        }
-    }
-    return brackets_num == 0 ? 0 : 1;
+        return brackets_num == 0 ? 0 : 1;
+    } else                          /* 未知字符 */
+        return -1;
 }
 
-static element_t constructe_element(char *substr, size_t substr_len, uint8_t is_arrive_end) {
-    if (is_integer(substr, substr_len)) {      /* 整数 */
+static element_t constructe_element(char *str, size_t curr, size_t end, uint8_t is_arrive_end) {
+    size_t i = curr;
+    char *substr = str + i;
+    i = get_end_next(str, i, end + 1);
+    size_t substr_len = i - curr;
+
+    if (is_integer(substr, substr_len)) {       /* 整数 */
         int32_t num = str2int32(substr, substr_len);
         return construct_integer_element(num);
-    } else if (is_float(substr, substr_len)) { /* 浮点数 */
+    } else if (is_float(substr, substr_len)) {  /* 浮点数 */
         float num = str2float(substr, substr_len);
         return construct_float_element(num);
-    } else {                                /* 字符串 */
+    } else {                                    /* 字符串 */
         element_t element;
         if (substr_len + 1 <= 7) {  /* 字符串放于序对中 */
             element.type = STRING_SHORT_T;
@@ -88,28 +148,26 @@ static void conn_pair(void **ret_p, void **last_pair_pp, void *new_pair_p) {
 }
 
 static void *save_str_to_pair_helper(char *str, size_t start, size_t end) {
+    element_t end_element = construct_point_element(0);
     size_t i = start;
-    while(i <= end && isspace(str[i]))
+    while(i <= end && is_space(str[i]))
         ++i;
     if (i - 1 == end)   /* 去除空白字符为空串 */
-        return 0;       /* 表空表 */
+        return 0;       /* 表示什么都没有 */
 
-    element_t end_element = construct_point_element(0);
-    if (str[i] != '(') {    /* 字母 or 数字 */
-        size_t substr_len = 0;
-        char *substr = str + i;
-        while (i <= end && !isspace(str[i])) {
-            ++substr_len;
-            ++i;
-        }
-        element_t element = constructe_element(substr, substr_len, i - 1 == end ? 1 : 0);
+    if (is_quote_or_string_or_symbol_number_start(str[i])) {   /* 以 引号 双引号 符号 开始 */
+        element_t element = constructe_element(str, i, end, i - 1 == end ? 1 : 0);
         return cons(&element, &end_element);
-    } else {                /* 以左括号开始 */
+    } else {                                            /* 以括号开始 */
         ++i;
+        while(is_space(i))
+            ++i;
         size_t right_bracket_pos = end;
         while(str[right_bracket_pos] != ')')
             --right_bracket_pos;
-        
+        if (i == right_bracket_pos)     /* 针对 () or (     ) */
+            return cons(&end_element, &end_element);    /* 表示空表 */
+
         void *ret = 0;
         void *last_pair_p = 0;
         while (i < right_bracket_pos) {
@@ -120,34 +178,37 @@ static void *save_str_to_pair_helper(char *str, size_t start, size_t end) {
                 uint8_t left_bracket_num = 0;
                 while (i < right_bracket_pos) {
                     char cc = str[i];
-                    if (cc == '(')
+                    if (cc == '(') {
                         ++left_bracket_num;
-                    else if (cc == ')') {
+                        ++i;
+                    } else if (cc == ')') {
                         if (left_bracket_num == 0)
                             break;
                         else
                             --left_bracket_num;
-                    }
-                    ++i;
+                        ++i;
+                    } else if (is_quote_or_string_or_symbol_number_start(cc))
+                        i = get_end_next(str, i, end + 1);
+                    else
+                        ++i;
                 }
-                element_t element = construct_point_element(save_str_to_pair_helper(str, new_start, i));
+                void *sub_ret = save_str_to_pair_helper(str, new_start, i);
+                if (sub_ret == 0) 
+                    sub_ret = cons(&end_element, &end_element); /* 表示空表，() 或 (    ) 得此 */
+                element_t element = construct_point_element(sub_ret);
                 void *new_pair_p = cons(&element, &end_element);
                 conn_pair(&ret, &last_pair_p, new_pair_p);
                 ++i;
-            } else if (!isspace(c)) {
-                size_t substr_len = 0;
-                char *substr = str + i;
-                while (!isspace(str[i]) && str[i] != ')' && str[i] != '(') {
-                    ++substr_len;
-                    ++i;
-                }
-                element_t element = constructe_element(substr, substr_len, 0);
+            } else if (!is_space(c)) {
+                element_t element = constructe_element(str, i, end, 0);
+                element = construct_point_element(cons(&element, &end_element));
                 void *new_pair_p = cons(&element, &end_element);
                 conn_pair(&ret, &last_pair_p, new_pair_p);
-            } else  /* 空白字符 */
+                i = get_end_next(str, i, end + 1);
+            } else      /* 空白字符 */
                 ++i;
         }
-        return ret;     /* () or (    ) 等情况，应得到空表 */
+        return ret;
     }
 }
 

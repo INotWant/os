@@ -80,7 +80,7 @@ int strcmp(char s1[], char s2[]) {
     return s1[i] - s2[i];
 }
 
-int isspace(char c) {
+int is_space(char c) {
     if (c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' || c == '\r')
         return 1;
     return 0;
@@ -90,6 +90,10 @@ int is_digital(char c) {
     if (c >= '0' && c <= '9')
         return 1;
     return 0;
+}
+
+int is_alphabet(char c) {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 }
 
 uint8_t is_integer(char *str, size_t len) {

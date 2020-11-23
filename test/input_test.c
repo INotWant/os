@@ -34,8 +34,10 @@ static void test1() {
 static void test2() {
     assert_eq(save_str_to_pair("", 0), 0, "err: test2-1\n");
     assert_eq(save_str_to_pair("  ", 2), 0, "err: test2-2\n");
-    assert_eq(save_str_to_pair("()", 2), 0, "err: test2-3\n");
-    assert_eq(save_str_to_pair(" () ", 4), 0, "err: test2-4\n");
+    assert_eq(car(save_str_to_pair("()", 2)).type, POINT_PAIR_T, "err: test2-3\n");
+    assert_eq(car(save_str_to_pair("()", 2)).val.point, 0, "err: test2-4\n");
+    assert_eq(car(save_str_to_pair(" () ", 4)).type, POINT_PAIR_T, "err: test2-5\n");
+    assert_eq(car(save_str_to_pair(" () ", 4)).val.point, 0, "err: test2-6\n");
 }
 
 // 测试 save_str_to_pair 2
@@ -66,41 +68,41 @@ static void test4() {
 // 测试 save_str_to_pair 4
 static void test5() {
     void *p1 = save_str_to_pair(" (a b) ", 7);
-    element_t element = car(p1);
+    element_t element = car(car(p1).val.point);
     assert_eq(element.val.short_string[0], 'a', "err: test5-1\n");
-    element = car(cdr(p1).val.point);
+    element = car(car(cdr(p1).val.point).val.point);
     assert_eq(element.val.short_string[0], 'b', "err: test5-2\n");
 
     void *p2 = save_str_to_pair(" ( a b) ", 8);
-    element = car(p2);
+    element = car(car(p2).val.point);
     assert_eq(element.val.short_string[0], 'a', "err: test5-3\n");
-    element = car(cdr(p2).val.point);
+    element = car(car(cdr(p2).val.point).val.point);
     assert_eq(element.val.short_string[0], 'b', "err: test5-4\n");
 
     void *p3 = save_str_to_pair(" ( a b ) ", 9);
-    element = car(p3);
+    element = car(car(p3).val.point);
     assert_eq(element.val.short_string[0], 'a', "err: test5-5\n");
-    element = car(cdr(p3).val.point);
+    element = car(car(cdr(p3).val.point).val.point);
     assert_eq(element.val.short_string[0], 'b', "err: test5-6\n");
 }
 
 // 测试 save_str_to_pair 4
 static void test6() {
     void *p1 = save_str_to_pair(" ((a) b) ", 9);
-    element_t element = car(car(p1).val.point);
+    element_t element = car(car(car(p1).val.point).val.point);
     assert_eq(element.val.short_string[0], 'a', "err: test6-1\n");
-    element = car(cdr(p1).val.point);
+    element = car(car(cdr(p1).val.point).val.point);
     assert_eq(element.val.short_string[0], 'b', "err: test6-2\n");
 
     void *p2 = save_str_to_pair(" (a (b) ) ", 10);
-    element = car(car(cdr(p2).val.point).val.point);
+    element = car(car(car(cdr(p2).val.point).val.point).val.point);
     assert_eq(element.val.short_string[0], 'b', "err: test6-3\n");
     element = cdr(car(cdr(p2).val.point).val.point);
     assert_eq(element.type, POINT_PAIR_T, "err: test6-4\n");
     assert_eq(element.val.point, 0, "err: test6-5\n");
 
     void *p3 = save_str_to_pair(" (() a) ", 8);
-    element = car(p3);
+    element = car(car(p3).val.point);
     assert_eq(element.type, POINT_PAIR_T, "err: test6-6\n");
     assert_eq(element.val.point, 0, "err: test6-7\n");
 }
