@@ -4,7 +4,7 @@
 #include <stddef.h>
 
 /** 每个元素所占存储空间 **/
-#define ELEMENT_SIZE 8
+#define ELEMENT_SIZE 5
 /** 一个序对所占的存储空间 **/
 #define PAIR_SIZE (ELEMENT_SIZE * 2)
 
@@ -19,17 +19,17 @@
 /** 由元素指针，设置数据类型 **/
 #define PUT_TYPE(ep, t) (*(uint8_t *)(ep) = (uint8_t)(t))
 /** 由元素指针，获取整型数值 **/
-#define GET_INT_VAL(ep) (*((int32_t *)(ep) + 1))
+#define GET_INT_VAL(ep) (*((int32_t *)((char *)(ep) + 1)))
 /** 由元素指针，设置整型数值 **/
-#define PUT_INT_VAL(ep, val) (*((int32_t *)(ep) + 1) = (int32_t)(val))
+#define PUT_INT_VAL(ep, val) (*((int32_t *)((char *)(ep) + 1)) = (int32_t)(val))
 /** 由元素指针，获取浮点型数值 **/
-#define GET_FLOAT_VAL(ep) (*((float *)(ep) + 1))
+#define GET_FLOAT_VAL(ep) (*((float *)((char *)(ep) + 1)))
 /** 由元素指针，设置浮点型数值 **/
-#define PUT_FLOAT_VAL(ep, val) (*((float *)(ep) + 1) = (float)(val))
+#define PUT_FLOAT_VAL(ep, val) (*((float *)((char *)(ep) + 1)) = (float)(val))
 /** 由元素指针，获取指针数值 **/
-#define GET_POINT_VAL(ep) ((void *)(*((uint32_t *)(ep) + 1)))
+#define GET_POINT_VAL(ep) ((void *)(*((uint32_t *)((char *)(ep) + 1))))
 /** 由元素指针，设置指针数值 **/
-#define PUT_POINT_VAL(ep, val) (*((uint32_t *)(ep) + 1) = (uint32_t)(val))
+#define PUT_POINT_VAL(ep, val) (*((uint32_t *)((char *)(ep) + 1)) = (uint32_t)(val))
 
 static char *old_start_point;   /* 永远指向当前在用的连续存储空间的首地址 */
 static char *new_start_point;   /* 永远指向下次被用的连续存储空间的首地址 */
@@ -73,12 +73,7 @@ static void assign_ep(char *ep, element_t *element_point) {
         PUT_INT_VAL(ep, element_point->val.ival);
     else if (type == FLOAT_T)
         PUT_FLOAT_VAL(ep, element_point->val.fval);
-    else if (type == STRING_SHORT_T) {
-        char *src = element_point->val.short_string;
-        char *dest = ep + 1;
-        for (int i = 0; i < 7; i++)
-            *(dest++) = *(src++);
-    }else if (type == STRING_LONG_T || type == POINT_PAIR_T)
+    else if (type == STRING_T || type == POINT_PAIR_T)
         PUT_POINT_VAL(ep, element_point->val.point);
 }
 
@@ -142,12 +137,7 @@ static void assign_element(element_t *element_point, char *ep){
         element_point->val.ival = GET_INT_VAL(ep);
     else if (type == FLOAT_T)
         element_point->val.fval = GET_FLOAT_VAL(ep);
-    else if (type == STRING_SHORT_T) {
-        char *src = ep + 1;
-        char *dest = element_point->val.short_string;
-        for (int i = 0; i < 7; i++)
-            *(dest++) = *(src++);
-    }else if (type == STRING_LONG_T || type == POINT_PAIR_T)
+    else if (type == STRING_T || type == POINT_PAIR_T)
         element_point->val.point = GET_POINT_VAL(ep);
 }
 
@@ -188,13 +178,8 @@ element_t construct_float_element(float val) {
 element_t construct_string_element(char *str) {
     size_t str_len = strlen(str) + 1;  /* key 字符串总长度（含结束符） */
     element_t element;
-    if (str_len <= 7) {
-        element.type = STRING_SHORT_T;
-        memory_copy((uint8_t *)str, (uint8_t *)element.val.short_string, str_len);
-    } else {
-        element.type = STRING_LONG_T;
-        element.val.point = put_string_to_constant_pool(str);
-    }
+    element.type = STRING_T;
+    element.val.point = put_string_to_constant_pool(str);
     return element;
 }
 

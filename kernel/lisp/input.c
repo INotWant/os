@@ -114,24 +114,18 @@ static element_t constructe_element(char *str, size_t curr, size_t end, uint8_t 
         return construct_float_element(num);
     } else {                                    /* 字符串 */
         element_t element;
-        if (substr_len + 1 <= 7) {  /* 字符串放于序对中 */
-            element.type = STRING_SHORT_T;
-            memory_copy((uint8_t *)substr, (uint8_t *)element.val.short_string, substr_len);
-            element.val.short_string[substr_len] = '\0';
-        } else {                    /* 字符串放于字符串常量池 */
-            element.type = STRING_LONG_T;
-            if (is_arrive_end) {         /* 已到最后（使代码尽可能不走该分支） */
-                char *p = (char *)memory_malloc(substr_len + 1);
-                memory_copy((uint8_t *)substr, (uint8_t *)p, substr_len);
-                p[substr_len] = '\0';
-                element.val.point = put_string_to_constant_pool(p);
-                memory_free(p);
-            } else {
-                char tmp = substr[substr_len];
-                substr[substr_len] = '\0';
-                element.val.point = put_string_to_constant_pool(substr);
-                substr[substr_len] = tmp;
-            }
+        element.type = STRING_T;
+        if (is_arrive_end) {         /* 已到最后（使代码尽可能不走该分支） */
+            char *p = (char *)memory_malloc(substr_len + 1);
+            memory_copy((uint8_t *)substr, (uint8_t *)p, substr_len);
+            p[substr_len] = '\0';
+            element.val.point = put_string_to_constant_pool(p);
+            memory_free(p);
+        } else {
+            char tmp = substr[substr_len];
+            substr[substr_len] = '\0';
+            element.val.point = put_string_to_constant_pool(substr);
+            substr[substr_len] = tmp;
         }
         return element;
     }

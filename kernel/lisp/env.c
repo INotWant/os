@@ -3,7 +3,7 @@
 #include "../../libc/string.h"
 
 #define GET_NEXT_PAIR_POINT(pp) (cdr(pp).val.point)
-#define GET_VAR_NAME_POINT(ep) (((ep)->type == STRING_SHORT_T) ? (ep)->val.short_string : (char *)((ep)->val.point))
+#define GET_VAR_NAME_POINT(ep) (char *)((ep)->val.point)
 
 void *env_top_point = 0;    /* 环境头指针，即指向最新创建的框架 */
 

@@ -20,7 +20,7 @@ static void test2() {
     extend_env(var_names, values);
     element_t ret = lookup_variable_value("0-0");
     assert_eq(ele1.type, ret.type, "err: test2-1\n");
-    assert_eq(strcmp(ele1.val.short_string, ret.val.short_string), 0, "err: test2-2\n");
+    assert_eq(strcmp(ele1.val.point, ret.val.point), 0, "err: test2-2\n");
 
     element_t ele1_new = construct_string_element("v2     ");
     define_var("0-0", &ele1_new);       /* define，已存在则覆盖 */
@@ -61,19 +61,19 @@ static void test4() {
     assert_eq(strcmp(ele1.val.point, ret.val.point), 0, "err: test4-2\n");
 
     ret = lookup_variable_value("0-0");     /* 查找之前环境的 */
-    assert_eq(ret.type, STRING_LONG_T, "err: test4-3\n");
+    assert_eq(ret.type, STRING_T, "err: test4-3\n");
     assert_eq(strcmp(ret.val.point, "v2     "), 0,"err: test4-4\n");
     
     ele1 = construct_string_element("v6     ");
     set_var_value("0-0", &ele1);            /* 设置之前环境的 */
     ret = lookup_variable_value("0-0");
-    assert_eq(ret.type, STRING_LONG_T, "err: test4-5\n");
+    assert_eq(ret.type, STRING_T, "err: test4-5\n");
     assert_eq(strcmp(ret.val.point, ele1.val.point), 0, "err: test4-6\n");
 
     ele1 = construct_string_element("v7     ");
     define_var("0-0", &ele1);               /* 在新框架中定义之前已有的 */
     ret = lookup_variable_value("0-0");
-    assert_eq(ret.type, STRING_LONG_T, "err: test4-7\n");
+    assert_eq(ret.type, STRING_T, "err: test4-7\n");
     assert_eq(strcmp(ret.val.point, ele1.val.point), 0, "err: test4-8\n");
 }
 

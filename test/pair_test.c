@@ -35,25 +35,22 @@ static void test2() {
     assert_eq(cdr_ep.val.fval, cdr_ep_.val.fval, "err: test2-4\n");
 }
 
-// 短字符串 长字符串
+// 字符串
 static void test3() {
     element_t car_ep;
-    car_ep.type = STRING_SHORT_T;
-    char *src_p = car_ep.val.short_string;
-    src_p[0] = '1';
-    src_p[1] = '2';
-    src_p[2] = '3';
-    src_p[3] = '\0';
+    car_ep.type = STRING_T;
+    char *src_p = "abc";
+    car_ep.val.point = src_p;
 
-    char *chars = "abc";
+    char *chars = "def";
     element_t cdr_ep;
-    cdr_ep.type = STRING_LONG_T;
+    cdr_ep.type = STRING_T;
     cdr_ep.val.point = chars;
     void *pp = cons(&car_ep, &cdr_ep);
 
     element_t car_ep_ = car(pp);
     assert_eq(car_ep.type, car_ep_.type, "err: test3-1\n");
-    char *dest_p = car_ep_.val.short_string;
+    char *dest_p = car_ep_.val.point;
     int i = 0;
     while(src_p[i] != '\0') {
         if (src_p[i] != dest_p[i]){
