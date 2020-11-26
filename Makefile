@@ -20,10 +20,10 @@ kernel.elf: boot/kernel_entry.o ${OBJ}
 	i386-elf-ld -o $@ -Ttext 0x7e00 $^
 
 run: os-image.bin
-	qemu-system-i386 -curses -fda os-image.bin
+	qemu-system-i386 -curses -hda os-image.bin
 
 debug: os-image.bin kernel.elf
-	qemu-system-i386 -curses -s -fda os-image.bin -S &
+	qemu-system-i386 -curses -s -hda os-image.bin -S &
 	${GDB} -ex "target remote localhost:1234" -ex "symbol-file kernel.elf"
 
 %.o: %.c ${HEADERS}

@@ -37,8 +37,10 @@ load_kernel:
     call print_nl
 
     mov bx, KERNEL_OFFSET   ; 内核被加载至内存的偏移，在 disk_load 中以 bx 为准 
-    mov dh, 64              ; 被加载至内存的扇区数目，在 disk_load 中以 dh 为准
+    mov cl, 0x02            ; 指定从哪个扇区开始（0x01 是 boot 扇区）
+    mov ch, 0x00            ; 指定柱面
     mov dl, [BOOT_DRIVE]    ; 指定从哪个（哪种）存储设备加载，此值来自 BIOS 的 dl
+    mov dh, 98              ; 被加载至内存的扇区数目，在 disk_load 中以 dh 为准
     call disk_load
     ret
 
