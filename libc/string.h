@@ -32,6 +32,16 @@ uint8_t is_float(char *str, size_t len);
 int32_t str2int32(char *str, size_t len);
 /** 字符串转为浮点数 **/
 float str2float(char *str, size_t len);
+/** 整数转为字符串 **/
+void int2str(int32_t num, char *str);
+/**
+ * 浮点数转为字符串（由于字符串的存储形式导致输出可能存在偏差）
+ * 
+ * @param: reserved_number --> 小数点后保留的位数
+ */
+void float2str(float num, char *str, uint8_t reserved_number);
+/** 把 4字节的无符号整数转为 16 进制字符串表示 **/
+void int2hex_str(uint32_t num, char *str);
 
 /**
  * 把字符串放入“字符串常量池”

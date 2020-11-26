@@ -31,10 +31,50 @@ static void test3() {
         kprint("err: test3-6\n");
 }
 
+// 测试 int2str
+static void test4() {
+    char str[12];
+    int2str(0, str);
+    assert_eq(strcmp(str, "0"), 0, "err: test4-1\n");
+    int2str(INT32_MIN, str);
+    assert_eq(strcmp(str, "-2147483648"), 0, "err: test4-2\n");
+    int2str(-INT32_MAX, str);
+    assert_eq(strcmp(str, "-2147483647"), 0, "err: test4-3\n");
+    int2str(INT32_MAX, str);
+    assert_eq(strcmp(str, "2147483647"), 0, "err: test4-4\n");
+}
+
+// 测试 float2str
+static void test5() {
+    char str[20];
+    float2str(-5.6f, str, 0);
+    assert_eq(strcmp(str, "-5"), 0, "err: test5-1\n");
+    float2str(-5.6f, str, 1);
+    assert_eq(strcmp(str, "-5.5"), 0, "err: test5-2\n");
+    float2str(5.6f, str, 1);
+    assert_eq(strcmp(str, "5.5"), 0, "err: test5-3\n");
+    float2str(5.6f, str, 2);
+    assert_eq(strcmp(str, "5.59"), 0, "err: test5-4\n");
+}
+
+// 测试 int2hex_str
+static void test6() {
+    char str[11];
+    int2hex_str(0, str);
+    assert_eq(strcmp(str, "0x00000000"), 0, "err: test6-1\n");
+    int2hex_str(0x3, str);
+    assert_eq(strcmp(str, "0x00000003"), 0, "err: test6-2\n");
+    int2hex_str(0xffffffff, str);
+    assert_eq(strcmp(str, "0xffffffff"), 0, "err: test6-3\n");
+}
+
 void string_test() {
     kprint("string_test start->\n");
     test1();
     test2();
     test3();
+    test4();
+    test5();
+    test6();
     kprint("string_test end<-\n");
 }

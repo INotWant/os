@@ -1,8 +1,6 @@
 #include "string.h"
 #include "hash_table.h"
 
-#include <stdint.h>
-
 void int_to_ascii(int n, char str[]) {
     int i, sign;
     if ((sign = n) < 0) {
@@ -163,6 +161,68 @@ float str2float(char *str, size_t len) {
     else
         ret += (str2int32(str + decimal_point_pos + 1, decimal_len) / mid);
     return ret;
+}
+
+void int2str(int32_t num, char *str) {
+    if (num == INT32_MIN) {
+        char *arr = "-2147483648";
+        int i = 0;
+        while (i < 12) {
+            str[i] = arr[i];
+            ++i;
+        }
+        return;
+    }
+    int i = 0;
+    int32_t n = num;
+    if (n < 0) {
+        str[i++] = '-';
+        n = -1 * n;
+    }
+    char arr[10];
+    int j = 0;
+    arr[j++] = n % 10 + '0';
+    while (n / 10 > 0) {
+        n /= 10;
+        arr[j++] = '0' + (n % 10);
+    }
+    while (j > 0)
+        str[i++] = arr[--j];
+    str[i] = '\0';
+}
+
+void float2str(float num, char *str, uint8_t reserved_number) {
+    int32_t n = (int32_t)num;
+    int2str(n, str);
+    int i = strlen(str);
+    if (reserved_number == 0)
+        return;
+    str[i++] = '.';
+    num -= n;
+    if (num < 0)
+        num = -1 * num;
+    while (reserved_number-- > 0) {
+        num *= 10;
+        str[i++] = (int) num + '0';
+        num -= (int)num;
+    }
+    str[i] = '\0';
+}
+
+void int2hex_str(uint32_t num, char *str) {
+    int index = 0;
+    str[index++] = '0';
+    str[index++] = 'x';
+    int i = 0;
+    while (i < 8) {
+        int n = (num >> ((7 - i) * 4)) & 0x0f;
+        if (n >= 10)
+            str[index++] = 'a' + (n - 10); 
+        else 
+            str[index++] = '0' + n;
+        ++i;
+    }
+    str[index] = '\0';
 }
 
 /** 使用哈希表实现 “字符串常量池” **/
