@@ -1,7 +1,8 @@
 #include "pair.h"
+#include "stack.h"
 #include "../../libc/mem.h"
 #include "../../libc/string.h"
-#include <stddef.h>
+#include <stdarg.h>
 
 /** 每个元素所占存储空间 **/
 #define ELEMENT_SIZE 5
@@ -38,6 +39,21 @@ static char *root;              /* 指向第一个序对，用于 GC 的存活�
 
 static size_t index = 0;        /* 当前可用索引 */
 
+static void *cons_helper(element_t *, element_t *);
+
+// 初始化 root 表
+static void init_root_table() {
+    element_t ele = construct_point_element(0);
+    void *p1 = cons_helper(&ele, &ele);     /* exp_p */
+    void *p2 = cons_helper(&ele, &ele);     /* env_p */
+    void *p3 = cons_helper(&ele, &ele);     /* stack_tp */
+    ele = construct_point_element(p2);
+    set_cdr(p1, &ele);
+    ele = construct_point_element(p3);
+    set_cdr(p2, &ele);
+    root = (char *)p1;
+}
+
 uint8_t pair_init() {
     size_t size = PAIR_MAX_NUMBER * PAIR_SIZE;
     char *p = (char *)memory_malloc(size);
@@ -48,13 +64,29 @@ uint8_t pair_init() {
     p = (char *)memory_malloc(size);
     if (p != 0) {
         new_start_point = p;
-        return 1;
     }else {
         memory_free(old_start_point);
         root = 0;
         index = 0;
         return 0;
     }
+    init_root_table();
+    return 1;
+}
+
+void update_exp_point(void *exp) {
+    element_t ele = construct_point_element(exp);
+    set_car(root, &ele);
+}
+
+void update_env_point(void *env) {
+    element_t ele = construct_point_element(env);
+    set_car(cdr(root).val.point, &ele);
+}
+
+void update_stack_top_point(void *stack_top_point) {
+    element_t ele = construct_point_element(stack_top_point);
+    set_car(cddr(root).val.point, &ele);
 }
 
 void pair_destory() {
@@ -115,19 +147,42 @@ static void garbage_collection() {
     index = (scan - old_start_point) / PAIR_SIZE;
 }
 
-void *cons(element_t *car_element_point, element_t *cdr_element_point) {
-    if (index == PAIR_MAX_NUMBER) {
-        garbage_collection();
-        if (index == PAIR_MAX_NUMBER)   /* GC 后仍无空间 */
-            return 0;
-    }
+static void *cons_helper(element_t *car_element_point, element_t *cdr_element_point) {
     void *pp = GET_PAIR_POINT(old_start_point, index);
     assign_ep(GET_CAR_EP(pp), car_element_point);
     assign_ep(GET_CDR_EP(pp), cdr_element_point);
     ++index;
-    if (root == 0)
-        root = pp;
     return pp;
+}
+
+static uint8_t is_point_pair_and_not_null(element_t *element_point) {
+    return element_point->type == POINT_PAIR_T && element_point->val.point != 0;
+}
+
+void *cons(element_t *car_element_point, element_t *cdr_element_point) {
+    /* 保存参数 -- for GC of pair */
+    if (is_point_pair_and_not_null(car_element_point))
+        push(car_element_point);
+    if (is_point_pair_and_not_null(cdr_element_point))
+        push(cdr_element_point);
+    if (index >= PAIR_MAX_NUMBER - STACK_RESERVE_NUMBER) {      /* 去除为 stack 保留的空间 */
+        garbage_collection();
+        if (index >= PAIR_MAX_NUMBER - STACK_RESERVE_NUMBER)    /* GC 后仍无空间 */
+            return 0;
+    }
+    void *ret = cons_helper(car_element_point, cdr_element_point);
+    /* 恢复参数 */
+    if (is_point_pair_and_not_null(car_element_point))
+        pop();
+    if (is_point_pair_and_not_null(cdr_element_point))
+        pop();
+    return ret;
+}
+
+void *cons_for_stack(element_t *car_element_point, element_t *cdr_element_point) {
+    if (index == PAIR_MAX_NUMBER)   /* 不进行 GC */
+        return 0;                   // TODO 报错退出
+    return cons_helper(car_element_point, cdr_element_point);
 }
 
 static void assign_element(element_t *element_point, char *ep){
@@ -159,6 +214,33 @@ void set_car(void *pair_point, element_t *element_point) {
 
 void set_cdr(void *pair_point, element_t *element_point) {
     assign_ep(GET_CDR_EP(pair_point), element_point);
+}
+
+static void *list_help(size_t num, element_t *ep) {
+    if (num == 0)
+        return 0;
+    element_t car_element = *ep;
+    element_t cdr_element = construct_point_element(list_help(num - 1, ep + 1));
+    return cons(&car_element, &cdr_element);
+}
+
+void *list(size_t num, element_t *ep) {
+    /* 保存参数（元素数组） -- for GC of pair */
+    size_t i = 0;
+    size_t size = 0;
+    while(i < num) {
+        if ((ep + i)->type == POINT_PAIR_T) {   /* 只需保存元素类型为指向序对指针 */
+            push(ep + i);
+            ++size;
+        }
+        ++i;
+    }
+    void *ret = list_help(num, ep);
+    i = 0;
+    /* 恢复 */
+    while (i++ < size)
+        pop();
+    return ret;
 }
 
 element_t construct_integer_element(int32_t val) {

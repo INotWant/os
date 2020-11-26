@@ -1,4 +1,5 @@
 #include "env.h"
+#include "stack.h"
 #include "../../libc/mem.h"
 #include "../../libc/string.h"
 
@@ -48,6 +49,13 @@ static void *insert_kv_to_frame(void *frame_point, void *kv_point) {
 }
 
 void *extend_env(void *var_names, void *values, void *last_env) {
+    /* [参数] 保存参数 var_names values -- for GC of pair */
+    if (var_names != 0 && values != 0) {
+        element_t ele = construct_point_element(var_names);
+        push(&ele);
+        ele = construct_point_element(values);
+        push(&ele);
+    }
     void *var_name_p = var_names;
     void *value_p = values;
     void *frame_point = 0;
@@ -59,6 +67,11 @@ void *extend_env(void *var_names, void *values, void *last_env) {
         frame_point = insert_kv_to_frame(frame_point, kv_point);
         var_name_p = GET_NEXT_PAIR_POINT(var_name_p);
         value_p = GET_NEXT_PAIR_POINT(value_p);
+    }
+    /* [参数] 恢复 */
+    if (var_names != 0 && values != 0) {
+        pop();
+        pop();
     }
     if (frame_point == 0)   /* var_names or values 为空表 */
         return last_env;

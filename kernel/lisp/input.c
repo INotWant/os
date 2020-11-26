@@ -1,5 +1,6 @@
 #include "input.h"
 #include "pair.h"
+#include "stack.h"
 #include "../../libc/string.h"
 #include "../../libc/mem.h"
 
@@ -134,6 +135,11 @@ static element_t constructe_element(char *str, size_t curr, size_t end, uint8_t 
 static void conn_pair(void **ret_p, void **last_pair_pp, void *new_pair_p) {
     if (*ret_p == 0) {
         *ret_p = new_pair_p;
+        /* [在建] 保存根指针 -- for GC of pair */
+        if (new_pair_p != 0) {
+            element_t ele = construct_point_element(new_pair_p);
+            push(&ele);
+        }
     } else {
         element_t conn_element = construct_point_element(new_pair_p);
         set_cdr(*last_pair_pp, &conn_element);
@@ -202,10 +208,18 @@ static void *save_str_to_pair_helper(char *str, size_t start, size_t end) {
             } else      /* 空白字符 */
                 ++i;
         }
+        /* [在建] 恢复 */
+        if (ret != 0)
+            pop();
         return ret;
     }
 }
 
 void *save_str_to_pair(char *str, size_t len) {
-    return save_str_to_pair_helper(str, 0, len - 1);
+    /* 清楚 root 表中的 exp 指针 */
+    update_exp_point(0);
+    void *exp = save_str_to_pair_helper(str, 0, len - 1);
+    /* 更新 root 表中的 exp 指针 -- for GC of pair */
+    update_exp_point(exp);
+    return exp;
 }
