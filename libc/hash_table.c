@@ -86,7 +86,6 @@ static void rehash(hash_table *htp) {
     if (new_tp == 0)     /* 无可用空间 */
         return;
     memory_set((uint8_t *)new_tp, 0, apply_size);
-    memory_copy((uint8_t *)htp->table, (uint8_t *)new_tp, htp->table_size * sizeof(kv *));
 
     for (size_t i = 0; i < htp->table_size; i++) {
         if (htp->table[i] != 0) {

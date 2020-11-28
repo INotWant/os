@@ -96,8 +96,11 @@ int is_alphabet(char c) {
 
 uint8_t is_integer(char *str, size_t len) {
     size_t i = 0;
-    if (str[i] == '-')
+    if (str[i] == '-') {
         ++i;
+        if (i == len)
+            return 0;
+    }
     while (i < len)
         if (!is_digital(str[i++]))
             return 0;
@@ -106,8 +109,11 @@ uint8_t is_integer(char *str, size_t len) {
 
 uint8_t is_float(char *str, size_t len) {
     size_t i = 0;
-    if (str[i] == '-')
+    if (str[i] == '-') {
         ++i;
+        if (i == len)
+            return 0;
+    }
     uint8_t has_decimal_point = 0;
     while (i < len) {
         char c = str[i++];
