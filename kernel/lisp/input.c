@@ -23,17 +23,24 @@ static int locate_quote(char *str, size_t start, size_t len) {
 // 定位字符串常量。返回字符串常量的结束位置，若判定字符串常量格式存在问题则返回 -1
 static int locate_string(char *str, size_t start, size_t len) {
     size_t i = start + 1;
-    while (i < len && (str[i] != '"' || str[i - 1] == '\\'))
+    while (i < len && (str[i] != '"'))
         ++i;
     if (i == len)
         return -1;
     return ++i;
 }
 
+static uint8_t is_available_char(char c) {
+    return is_alphabet(c) || is_digital(c) ||
+           c == '!' || c == '_' || c == '.' || c == '=' || c == '?' ||
+           c == '+' || c == '-' || c == '*' || c == '/' || c == '%' ||
+           c == '<' || c == '>';
+}
+
 // 定位符号或数字。返回符号或数字的结束位置
 static int locate_symbol_or_number(char *str, size_t start, size_t len) {
     size_t i = start + 1;
-    while(i < len && (is_alphabet(str[i]) || is_digital(str[i]) || str[i] == '_'))
+    while(i < len && is_available_char(str[i]))
         ++i;
     return i;
 }
@@ -43,7 +50,7 @@ static uint8_t is_quote_or_string_or_symbol_number_start(char c) {
         return 1;
     if (c == '"')
         return 1;
-    if (is_alphabet(c) || is_digital(c) || c == '_')
+    if (is_available_char(c))
         return 1;
     return 0;
 }
@@ -160,7 +167,7 @@ static void *save_str_to_pair_helper(char *str, size_t start, size_t end) {
         return cons(&element, &end_element);
     } else {                                            /* 以括号开始 */
         ++i;
-        while(is_space(i))
+        while(is_space(str[i]))
             ++i;
         size_t right_bracket_pos = end;
         while(str[right_bracket_pos] != ')')
