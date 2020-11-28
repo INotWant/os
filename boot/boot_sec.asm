@@ -12,7 +12,7 @@
 KERNEL_OFFSET equ 0x7e00
 
     mov [BOOT_DRIVE], dl
-    mov bp, 0x7000      ; 初始栈底指针（指向内存）--> base pointer
+    mov bp, 0x7b00      ; 初始栈底指针（指向内存）--> base pointer
     mov sp, bp          ; 初始栈顶指针          --> stack pointer
 
     mov bx, MSG_REAL_MODE
