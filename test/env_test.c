@@ -2,6 +2,7 @@
 #include "tools.h"
 #include "../kernel/lisp/env.h"
 #include "../kernel/lisp/pair.h"
+#include "../kernel/lisp/constant.h"
 #include "../libc/string.h"
 
 static void *env;
@@ -9,13 +10,13 @@ static void *env;
 // 测试 lookup_variable_value 查找不存在元素
 static void test1() {
     element_t element = lookup_variable_value("0-0", env);
-    assert_eq(element.type, NON_EXIST, "err: test1\n");
+    assert_eq(element.type, NON_EXIST_T, "err: test1\n");
 }
 
 // 测试 extend_env & lookup_variable_value & define_var
 static void test2() {
     element_t ele1 = construct_string_element("0-0");
-    element_t ele2 = construct_point_element(0);
+    element_t ele2 = ZERO_POINT;
     void *var_names = cons(&ele1, &ele2);
     ele1 = construct_string_element("v1");
     void *values = cons(&ele1, &ele2);
@@ -52,7 +53,7 @@ static void test3() {
 // 测试 extend_env
 static void test4() {
     element_t ele1 = construct_string_element("1-0");
-    element_t ele2 = construct_point_element(0);
+    element_t ele2 = ZERO_POINT;
     void *var_names = cons(&ele1, &ele2);
     ele1 = construct_string_element("v5     ");
     void *values = cons(&ele1, &ele2); 

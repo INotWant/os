@@ -1,5 +1,6 @@
 #include "env.h"
 #include "stack.h"
+#include "constant.h"
 #include "../../libc/mem.h"
 #include "../../libc/string.h"
 
@@ -24,7 +25,7 @@ static void *lookup_kv_form_frame(void *frame_point, char *var_name) {
 static element_t lookup_variable_value_form_frame(void *frame_point, char *var_name) {
     void *p = lookup_kv_form_frame(frame_point, var_name);
     if (p == 0)
-        return construct_non_exist_element();
+        return NON_EXIST;
     else
         return cdr(p);
 }
@@ -34,11 +35,11 @@ element_t lookup_variable_value(char *var_name, void *env) {
     while (p != 0) {
         void *frame_point = car(p).val.point;
         element_t element = lookup_variable_value_form_frame(frame_point, var_name);
-        if (element.type != NON_EXIST)
+        if (element.type != NON_EXIST_T)
             return element;
         p = GET_NEXT_PAIR_POINT(p);
     }
-    return construct_non_exist_element();
+    return NON_EXIST;
 }
 
 // 头插

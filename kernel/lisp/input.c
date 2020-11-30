@@ -1,6 +1,7 @@
 #include "input.h"
 #include "pair.h"
 #include "stack.h"
+#include "constant.h"
 #include "../../libc/string.h"
 #include "../../libc/mem.h"
 
@@ -155,7 +156,7 @@ static void conn_pair(void **ret_p, void **last_pair_pp, void *new_pair_p) {
 }
 
 static void *save_str_to_pair_helper(char *str, size_t start, size_t end) {
-    element_t end_element = construct_point_element(0);
+    element_t end_element = ZERO_POINT;
     size_t i = start;
     while(i <= end && is_space(str[i]))
         ++i;

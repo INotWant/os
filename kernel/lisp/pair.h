@@ -78,7 +78,7 @@
 #define FLOAT_T         0x1   /* 浮点型 */
 #define STRING_T        0x2   /* 字符串 */
 #define POINT_PAIR_T    0x3   /* 指针 */
-#define NON_EXIST       0xe   /* 表不存在的元素 */
+#define NON_EXIST_T     0xe   /* 表不存在的元素 */
 #define BROKEN_HEART_T  0xf   /* 破碎的心，用于 GC */
 
 /** 序对中元素（类型 + 值） **/
@@ -193,7 +193,13 @@ element_t construct_point_element(void *point);
  */
 element_t construct_non_exist_element();
 
+/**
+ * 打印 element_t
+ */
+void print_element(element_t ele);
+
 /** 一些有用的宏定义 **/
+#define caar(p) car(car(p).val.point)
 #define cadr(p) car(cdr(p).val.point)
 #define cddr(p) cdr(cdr(p).val.point)
 #define caadr(p) car(cadr(p).val.point)

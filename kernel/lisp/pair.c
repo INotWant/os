@@ -1,8 +1,9 @@
 #include "pair.h"
 #include "stack.h"
+#include "procedure.h"
 #include "../../libc/mem.h"
 #include "../../libc/string.h"
-#include <stdarg.h>
+#include "../../drivers/screen.h"
 
 /** 每个元素所占存储空间 **/
 #define ELEMENT_SIZE 5
@@ -43,7 +44,8 @@ static void *cons_helper(element_t *, element_t *);
 
 // 初始化 root 表
 static void init_root_table() {
-    element_t ele = construct_point_element(0);
+    extern element_t ZERO_POINT;
+    element_t ele = ZERO_POINT;
     void *p1 = cons_helper(&ele, &ele);     /* exp_p */
     void *p2 = cons_helper(&ele, &ele);     /* env_p */
     void *p3 = cons_helper(&ele, &ele);     /* stack_tp */
@@ -273,6 +275,30 @@ element_t construct_point_element(void *point) {
 
 element_t construct_non_exist_element() {
     element_t element;
-    element.type = NON_EXIST;
+    element.type = NON_EXIST_T;
     return element;
+}
+
+void print_element(element_t ele) {
+    if (ele.type == INTEGER_T) {
+        char str[13];
+        int2str(ele.val.ival, str);
+        kprint(str);
+    } else if (ele.type == FLOAT_T) {
+        char str[20];
+        float2str(ele.val.fval, str, 6);
+        kprint(str);
+    } else if (ele.type == STRING_T) {
+        kprint(ele.val.point);
+    } else if (ele.type == NON_EXIST_T) {
+        kprint("non exist!");
+    } else if (ele.type == POINT_PAIR_T) {
+        if (is_primitive_procedure(ele.val.point))
+            kprint("#primitive -- ");
+        else if (is_compound_procedure(ele.val.point))
+            kprint("#compound -- ");
+        char str[11];
+        int2hex_str((uint32_t)ele.val.point, str);
+        kprint(str);
+    }
 }

@@ -26,7 +26,7 @@ static void test1(){
 // 测试空栈 pop
 static void test2(){
     element_t element = pop();
-    assert_eq(element.type, NON_EXIST, "err: test2\n");
+    assert_eq(element.type, NON_EXIST_T, "err: test2\n");
 }
 
 void stack_test() {

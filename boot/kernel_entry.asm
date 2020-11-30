@@ -4,9 +4,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 global _start
+global _loop
 
 [bits 32]
 _start:
     [extern kernel_main]    ; 引入外部定义
     call kernel_main
+_loop:
     jmp $

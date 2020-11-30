@@ -1,4 +1,5 @@
 #include "stack.h"
+#include "constant.h"
 
 /** 栈顶指针 **/
 void *stack_top_point;
@@ -16,7 +17,7 @@ uint8_t push(element_t *element_point) {
 
 element_t pop() {
     if (stack_top_point == 0)
-        return construct_non_exist_element();
+        return NON_EXIST;
 
     element_t element = car(stack_top_point);
     stack_top_point = cdr(stack_top_point).val.point;
