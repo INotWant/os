@@ -9,4 +9,19 @@ void init_keyboard();
  */
 int input_len();
 
+/**
+ * 清楚键盘输入缓存
+ */
+void clear_key_buffer();
+
+/**
+ * 开启键盘
+ */
+void enable_keyboard();
+
+/**
+ * 关闭键盘
+ */
+void disable_keyboard();
+
 #endif

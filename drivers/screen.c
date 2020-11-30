@@ -128,3 +128,16 @@ static void set_cursor_offset(int offset) {
 static int get_offset(int col, int row) { return 2 * (row * MAX_COLS + col); }
 static int get_offset_row(int offset) { return offset / (2 * MAX_COLS); }
 static int get_offset_col(int offset) { return (offset - (get_offset_row(offset)*2*MAX_COLS))/2; }
+
+void enable_cursor(uint8_t cursor_start, uint8_t cursor_end) {
+    port_byte_out(REG_SCREEN_CTRL, 0x0A);
+    port_byte_out(REG_SCREEN_DATA, (port_byte_in(REG_SCREEN_DATA) & 0xC0) | cursor_start);
+
+    port_byte_out(REG_SCREEN_CTRL, 0x0B);
+    port_byte_out(REG_SCREEN_DATA, (port_byte_in(REG_SCREEN_DATA) & 0xE0) | cursor_end);
+}
+
+void disable_cursor() {
+    port_byte_out(REG_SCREEN_CTRL, 0x0A);
+    port_byte_out(REG_SCREEN_DATA, 0x20);
+}

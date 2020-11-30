@@ -36,6 +36,7 @@ extern void user_input(char *input);
 #define BUFFER_SIZE 256
 static char key_buffer[BUFFER_SIZE];
 static uint8_t has_shift = 0;
+static uint8_t is_enable = 0;
 
 #define SC_MAX 57
 const char *sc_name[] = { "ERROR", "Esc", "1", "2", "3", "4", "5", "6", 
@@ -91,6 +92,8 @@ static char shift_helper(char c, uint8_t scancode) {
 static void keyboard_callback(registers_t regs) {
     /* The PIC leaves us the scancode in port 0x60 */
     uint8_t scancode = port_byte_in(0x60);
+    if (!is_enable)
+        return;
     if (scancode > SC_MAX) return;
     if (scancode == BACKSPACE) {
         if (strlen(key_buffer) > 0) {
@@ -131,4 +134,16 @@ int input_len() {
 
 void init_keyboard() {
     update_interrupt_handler(IRQ1, keyboard_callback);
+}
+
+void clear_key_buffer() {
+    key_buffer[0] = '\0';
+}
+
+void enable_keyboard() {
+    is_enable = 1;
+}
+
+void disable_keyboard() {
+    is_enable = 0;
 }

@@ -1,6 +1,8 @@
 #ifndef SCREEN_H
 #define SCREEN_H
 
+#include <stdint.h>
+
 #define VIDEO_ADDRESS 0xb8000
 #define MAX_ROWS 25
 #define MAX_COLS 80
@@ -30,5 +32,15 @@ void kprint(char *message);
  * 清空当前屏幕光标上一位置打印的字符
  */
 void kprint_backspace();
+
+/**
+ * 启用光标
+ */
+void enable_cursor(uint8_t cursor_start, uint8_t cursor_end);
+
+/**
+ * 屏蔽光标
+ */
+void disable_cursor();
 
 #endif
