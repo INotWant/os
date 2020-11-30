@@ -1,6 +1,7 @@
 #include "isr.h"
 #include "idt.h"
 #include "ports.h"
+#include "timer.h"
 #include "../drivers/screen.h"
 #include "../drivers/keyboard.h"
 #include "../libc/string.h"
@@ -80,6 +81,7 @@ void interrupt_install() {
 
 void irq_install() {
     asm volatile("sti"); /* 恢复中断 */
+    init_timer();        /* IRQ0: 定时器中断 */
     init_keyboard();     /* IRQ1: 键盘中断 */
 }
 
