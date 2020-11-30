@@ -114,12 +114,7 @@ static void *extend(size_t size){
 
     uint32_t *hp = (uint32_t *)mem_brk;
     uint8_t flags = mem_start != mem_brk && GET_ALLOC(last_chunk_point) == 1 ? 0x3 : 0x1;
-
     PUT(hp, PACK(extend_size, flags));
-    PUT(hp + 1, last_chunk_point);
-    PUT(hp + 2, 0);
-    if (last_chunk_point != 0 && !GET_ALLOC(last_chunk_point))
-        PUT(last_chunk_point + 2, hp);
 
     last_chunk_point = hp;
     mem_brk += extend_size;
