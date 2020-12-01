@@ -45,6 +45,7 @@ extern element_t QUOTE_FALSE;
 extern element_t LAMBDA;
 extern element_t IF;
 extern element_t BEGIN;
+extern element_t COND_ELSE_ERR;
 
 /** 定义一些 procedure.c 模块使用的 element_t 常量 **/
 extern element_t PROCEDURE;

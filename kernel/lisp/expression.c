@@ -2,6 +2,7 @@
 #include "constant.h"
 #include "../../libc/mem.h"
 #include "../../libc/string.h"
+#include "eval.h"
 
 static uint8_t is_number(element_t *ep) {
     return ep->type == INTEGER_T || ep->type == FLOAT_T;
@@ -225,4 +226,47 @@ void* first_operand(void *ops) {
 
 void *rest_operands(void *ops) {
     return cdr(ops).val.point;
+}
+
+uint8_t is_cond(void *exp) {
+    return tagged(exp, "cond");
+}
+
+void *cond_clauses(void *exp) {
+    return cdr(exp).val.point;
+}
+
+void *cond_predicate(void *clause) {
+    return car(clause).val.point;
+}
+
+void *cond_actions(void *clause) {
+    return cdr(clause).val.point;
+}
+
+static void *sequence_to_exp(void *seq) {
+    if (seq == 0)
+        return 0;
+    if (is_last_exp(seq))
+        return first_exp(seq);
+    return make_begin(seq);
+}
+
+static void *cond_to_if_helper(void *clauses) {
+    if (clauses == 0)
+        return cons(&QUOTE_FALSE, &ZERO_POINT);
+    void *first_clause = first_exp(clauses);
+    void *rest_clauses = rest_exps(clauses);
+    if (tagged(first_clause, "else")) {
+        if (rest_clauses != 0)
+            eval_error_handler(COND_ELSE_ERR);
+        return sequence_to_exp(cond_actions(first_clause));
+    } else
+        return make_if(cond_predicate(first_clause),
+                       sequence_to_exp(cond_actions(first_clause)),
+                       cond_to_if_helper(rest_clauses));
+}
+
+void *cond_to_if(void *exp) {
+    return cond_to_if_helper(cond_clauses(exp));
 }

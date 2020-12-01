@@ -183,4 +183,32 @@ void *first_operand(void *ops);
  */
 void *rest_operands(void *ops);
 
+/**
+ * 判断表达式是否是 cond 表达式
+ * 
+ * cond: (cond  clause_1 ... <clause_n>)
+ *     clause: (predicate actions)
+ */
+uint8_t is_cond(void *exp);
+
+/**
+ * 获取 cond 表达式的 clauses
+ */
+void *cond_clauses(void *exp);
+
+/**
+ * 获取 cond 表达式中 clause 的谓词
+ */
+void *cond_predicate(void *clause);
+
+/**
+ * 获取 cond 表达式中 clause 的 actions
+ */
+void *cond_actions(void *clause);
+
+/**
+ * 转换 cond 表达式为 if 表达式
+ */
+void *cond_to_if(void *exp);
+
 #endif

@@ -39,6 +39,7 @@ element_t QUOTE_FALSE;
 element_t LAMBDA;
 element_t IF;
 element_t BEGIN;
+element_t COND_ELSE_ERR;
 
 element_t PROCEDURE;
 element_t PRIMITIVE;
@@ -91,6 +92,7 @@ void constant_init() {
     LAMBDA = construct_string_element("lambda");
     IF = construct_string_element("if");
     BEGIN = construct_string_element("begin");
+    COND_ELSE_ERR = construct_string_element("else clause isn't last -- COND->if");
 
     PROCEDURE = construct_string_element("procedure");
     PRIMITIVE = construct_string_element("primitive");
