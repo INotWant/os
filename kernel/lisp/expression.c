@@ -1,8 +1,9 @@
 #include "expression.h"
 #include "constant.h"
+#include "eval.h"
+#include "stack.h"
 #include "../../libc/mem.h"
 #include "../../libc/string.h"
-#include "eval.h"
 
 static uint8_t is_number(element_t *ep) {
     return ep->type == INTEGER_T || ep->type == FLOAT_T;
@@ -261,12 +262,75 @@ static void *cond_to_if_helper(void *clauses) {
         if (rest_clauses != 0)
             eval_error_handler(COND_ELSE_ERR);
         return sequence_to_exp(cond_actions(first_clause));
-    } else
-        return make_if(cond_predicate(first_clause),
-                       sequence_to_exp(cond_actions(first_clause)),
-                       cond_to_if_helper(rest_clauses));
+    } else {
+        void *consequent = sequence_to_exp(cond_actions(first_clause));
+        /* [在建] -- for GC of pair */
+        element_t ele = construct_point_element(consequent);
+        push(&ele);
+        void *alternative = cond_to_if_helper(rest_clauses);
+        pop();
+        return make_if(cond_predicate(first_clause), consequent, alternative);
+    }
+
 }
 
 void *cond_to_if(void *exp) {
     return cond_to_if_helper(cond_clauses(exp));
+}
+
+uint8_t is_let(void *exp) {
+    return tagged(exp, "let");
+}
+
+static int get_len(void *seq) {
+    int len = 0;
+    void *curr = seq;
+    while (curr != 0) {
+        ++len;
+        curr = cdr(curr).val.point;
+    }
+    return len;
+}
+
+static void *let_vars_exps_helper(void *seq, void *(*f)(void *)){
+    int len = get_len(seq);
+    element_t *ep = memory_malloc(len * sizeof(element_t));
+    void * curr = seq;
+    int i = 0;
+    while (curr != 0) {
+        *(ep + i++) = construct_point_element(f(curr));
+        curr = cdr(curr).val.point;
+    }
+    void *ret = list(len, ep);
+    memory_free(ep);
+    return ret;
+}
+
+static void *caar_(void *exp) {
+    return car(car(exp).val.point).val.point;
+}
+
+static void *cadar_(void *exp) {
+    return car(cdr(car(exp).val.point).val.point).val.point;
+}
+
+void *let_vars(void *exp) {
+    return let_vars_exps_helper(cadr(exp).val.point, caar_);
+}
+
+void *let_exps(void *exp) {
+    return let_vars_exps_helper(cadr(exp).val.point, cadar_);
+}
+
+void *let_body(void *exp) {
+    return cddr(exp).val.point;
+}
+
+void *let_to_lambda_call(void *exp) {
+    element_t lambda_ele = construct_point_element(make_lambda(let_vars(exp), let_body(exp)));
+    /* [在建] -- for GC of pair */
+    push(&lambda_ele);
+    element_t exps_ele = construct_point_element(let_exps(exp));
+    pop();
+    return cons(&lambda_ele, &exps_ele);
 }

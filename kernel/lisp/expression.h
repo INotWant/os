@@ -211,4 +211,31 @@ void *cond_actions(void *clause);
  */
 void *cond_to_if(void *exp);
 
+/**
+ * 判断是否是 let 表达式
+ * 
+ * let: (let ((<var_1> <exp_1>) ... (<var_n> <exp_n>)) <body>)
+ */
+uint8_t is_let(void *exp);
+
+/**
+ * 获取 let 表达式中的所有 var
+ */
+void *let_vars(void *exp);
+
+/**
+ * 获取 let 表达式中的所有 exp
+ */
+void *let_exps(void *exp);
+
+/**
+ * 获取 let 表达式中的 body
+ */
+void *let_body(void *exp);
+
+/**
+ * 转换 let 表达式为等价的 lambda 
+ */
+void *let_to_lambda_call(void *exp);
+
 #endif

@@ -69,6 +69,8 @@ element_t eval(void *exp, void *env) {
         return eval(cond_to_if(exp), env);
     else if (is_lambda(exp)) 
         return construct_point_element(make_procedure(lambda_parameters(exp), lambda_body(exp), env));
+    else if (is_let(exp))
+        return eval(let_to_lambda_call(exp), env);
     else if (is_begin(exp))
         return eval_sequence(begin_actions(exp), env);
     else if (is_application(exp)){
