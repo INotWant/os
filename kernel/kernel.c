@@ -57,10 +57,12 @@ void user_input(char* input) {
     else if (len == 0) {
         if (exp_len == 0)
             kprint("> ");
+        else 
+            exp_str[exp_len++] = '\n';
         return;
     } else {
         exp_len += len;
-        if (exp_len > EXP_MAX_LEN) {
+        if (exp_len >= EXP_MAX_LEN) {
             kprint("too many characters in a expression!");
             exp_len = 0;
         } else {
@@ -76,8 +78,10 @@ void user_input(char* input) {
             } else if (flag == -1) {    /* 表达式不合法 */
                 kprint(">> illegal expression!");
                 exp_len = 0;
-            } else if (flag == 1)       /* 表达式不完整继续输入 */
+            } else if (flag == 1) {      /* 表达式不完整继续输入 */
+                exp_str[exp_len++] = '\n';
                 return;
+            }
         }
     }
     kprint("\n> ");

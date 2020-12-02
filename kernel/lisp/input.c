@@ -21,13 +21,13 @@ static int locate_quote(char *str, size_t start, size_t len) {
     return i;
 }
 
-// 定位字符串常量。返回字符串常量的结束位置，若判定字符串常量格式存在问题则返回 -1
+// 定位字符串常量。返回字符串常量的结束位置，若判定字符串不完整则返回 -2
 static int locate_string(char *str, size_t start, size_t len) {
     size_t i = start + 1;
     while (i < len && (str[i] != '"'))
         ++i;
     if (i == len)
-        return -1;
+        return -2;
     return ++i;
 }
 
@@ -76,6 +76,8 @@ int is_legal(char *str, size_t len) {
         int ret = get_end_next(str, i, len);
         if (ret == -1)
             return -1;
+        if (ret == -2)
+            return 1;
         i = ret;
         while (i < len && is_space(str[i]))
             ++i;
@@ -100,6 +102,8 @@ int is_legal(char *str, size_t len) {
                 int ret = get_end_next(str, i - 1, len);
                 if (ret == -1)
                     return -1;
+                if (ret == -2)
+                    return 1;
                 i = ret;
             } else                  /* 未知字符 */
                 return -1;
