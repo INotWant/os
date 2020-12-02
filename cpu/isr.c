@@ -79,10 +79,10 @@ void interrupt_install() {
     set_idt();
 }
 
-void irq_install() {
-    asm volatile("sti"); /* 恢复中断 */
-    init_timer();        /* IRQ0: 定时器中断 */
-    init_keyboard();     /* IRQ1: 键盘中断 */
+void irq_install(input_handler_fp default_input_handler) {
+    asm volatile("sti");                        /* 恢复中断 */
+    init_timer();                               /* IRQ0: 定时器中断 */
+    init_keyboard(default_input_handler);       /* IRQ1: 键盘中断 */
 }
 
 static char *exception_messages[] = {

@@ -16,6 +16,7 @@ element_t WNP_EQ;
 element_t WNP_NE;
 element_t WNP_LE;
 element_t WNP_GE;
+element_t WNP_READ;
 element_t UT_ADD;
 element_t UT_SUB;
 element_t UT_MUL;
@@ -30,6 +31,9 @@ element_t UT_EQ;
 element_t UT_NE;
 element_t UT_LE;
 element_t UT_GE;
+element_t ERR_ENL_READ;
+element_t ERR_TMCL_READ;
+element_t ERR_TMCE_READ;
 
 element_t VAR_NON_EXIST;
 element_t PROC_NON_EXIST;
@@ -69,6 +73,7 @@ void constant_init() {
     WNP_NE = construct_string_element("wrong number of parameters -- !=");
     WNP_LE = construct_string_element("wrong number of parameters -- <=");
     WNP_GE = construct_string_element("wrong number of parameters -- >=");
+    WNP_READ = construct_string_element("wrong number of parameters -- read");
     UT_ADD = construct_string_element("unsupport type -- +");
     UT_SUB = construct_string_element("unsupport type -- -");
     UT_MUL = construct_string_element("unsupport type -- *");
@@ -83,6 +88,9 @@ void constant_init() {
     UT_NE = construct_string_element("unsupport type -- !=");
     UT_LE = construct_string_element("unsupport type -- <=");
     UT_GE = construct_string_element("unsupport type -- >=");
+    ERR_ENL_READ = construct_string_element("expression not legal -- read");
+    ERR_TMCL_READ = construct_string_element("too many characters in a line -- read");
+    ERR_TMCE_READ = construct_string_element("too many characters in a expression -- read");
 
     VAR_NON_EXIST = construct_string_element("variable non exist -- EVAL");
     PROC_NON_EXIST = construct_string_element("procedure non exist -- EVAL");

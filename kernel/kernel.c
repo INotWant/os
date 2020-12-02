@@ -14,16 +14,18 @@
 
 #include "../test/test.h"
 
-/** 表达式最大长度 **/
-#define EXP_MAX_LEN 2048
-
 /* 存放表达式 */
 static char *exp_str;
 static size_t exp_len = 0;
 
+/**
+ * 函数声明
+ */
+static void default_input_handler(char* input);
+
 void kernel_main() {
     interrupt_install();
-    irq_install();
+    irq_install(default_input_handler);
 
     memory_init();
     pair_init();
@@ -46,15 +48,16 @@ void clear_exp() {
     exp_len = 0;
 }
 
-void user_input(char* input) {
+static void default_input_handler(char* input) {
     if (strcmp(input, "end") == 0){
         kprint("Stopping the CPU, Bye!\n");
         asm volatile("hlt");
     }
     int len = input_len();
-    if (len == -1)
+    if (len == -1) {
         kprint("too many characters in a line!");
-    else if (len == 0) {
+        exp_len = 0;
+    } else if (len == 0) {
         if (exp_len == 0)
             kprint("> ");
         else 

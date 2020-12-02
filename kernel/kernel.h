@@ -8,8 +8,6 @@
 #define EBP_CONSTANT    0x7b00
 #define ESP_CONSTANT    0x7af8   
 
-void user_input(char *input);
-
 void clear_exp();
 
 #endif

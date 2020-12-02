@@ -20,6 +20,7 @@ extern element_t WNP_EQ;
 extern element_t WNP_NE;
 extern element_t WNP_LE;
 extern element_t WNP_GE;
+extern element_t WNP_READ;
 extern element_t UT_ADD;
 extern element_t UT_SUB;
 extern element_t UT_MUL;
@@ -34,6 +35,9 @@ extern element_t UT_EQ;
 extern element_t UT_NE;
 extern element_t UT_LE;
 extern element_t UT_GE;
+extern element_t ERR_ENL_READ;
+extern element_t ERR_TMCL_READ;
+extern element_t ERR_TMCE_READ;
 
 /** 定义一些 eval.c 模块使用的 element_t 常量 **/
 extern element_t VAR_NON_EXIST;

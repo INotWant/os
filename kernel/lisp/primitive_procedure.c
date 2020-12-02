@@ -2,7 +2,10 @@
 #include "procedure.h"
 #include "eval.h"
 #include "constant.h"
+#include "input.h"
+#include "lisp.h"
 #include "../../drivers/screen.h"
+#include "../../drivers/keyboard.h"
 #include "../../libc/string.h"
 #include "../../libc/mem.h"
 
@@ -287,6 +290,59 @@ static element_t ge_impl(void *args) {
     return eq_impl(args);
 }
 
+static char *exp_str;
+static size_t exp_len = 0;
+static int flag;
+
+static void input_handler_for_read(char *input) {
+    int len = input_len();
+    if (len == -1) {
+        flag = -2;
+    } else if (len == 0) {
+        if (exp_len != 0)
+            exp_str[exp_len++] = '\n';
+    } else {
+        exp_len += len;
+        if (exp_len >= EXP_MAX_LEN) {
+            flag = -3;
+        } else {
+            memory_copy((uint8_t *)input, (uint8_t *)(exp_str + (exp_len - len)), len);
+            flag = is_legal(exp_str, exp_len);
+        }
+    }
+}
+
+static element_t read_impl(void *args) {
+    if (get_args_number(args) != 0)
+        eval_error_handler(WNP_READ);
+    exp_len = 0;
+    exp_str = (char *)memory_malloc(EXP_MAX_LEN);
+    input_handler_fp default_input_handler = input_handler;
+    input_handler = input_handler_for_read;
+    clear_key_buffer();
+    flag = 1;
+
+    asm volatile("sti");
+    while (flag == 1) {
+        asm volatile("hlt");
+    }
+
+    input_handler = default_input_handler;
+    if (flag == 0) {
+        element_t ele = construct_point_element(save_str_to_pair(exp_str, exp_len));
+        memory_free(exp_str);
+        return ele;
+    }
+
+    memory_free(exp_str);
+    if (flag == -1)
+        eval_error_handler(ERR_ENL_READ);
+    else if (flag == -2)
+        eval_error_handler(ERR_TMCL_READ);
+    else if (flag == -3)
+        eval_error_handler(ERR_TMCE_READ);
+}
+
 void *primitive_procedure_names() {
     element_t ele1 = construct_string_element("+");
     element_t ele2 = construct_string_element("-");
@@ -304,8 +360,9 @@ void *primitive_procedure_names() {
     element_t ele14 = construct_string_element("!=");
     element_t ele15 = construct_string_element("<=");
     element_t ele16 = construct_string_element(">=");
-    element_t elements[] = {ele1, ele2, ele3, ele4, ele5, ele6, ele7, ele8, ele9, ele10, ele11, ele12, ele13, ele14, ele15, ele16};
-    return list(16, elements);
+    element_t ele17 = construct_string_element("read");
+    element_t elements[] = {ele1, ele2, ele3, ele4, ele5, ele6, ele7, ele8, ele9, ele10, ele11, ele12, ele13, ele14, ele15, ele16, ele17};
+    return list(17, elements);
 }
 
 void *primitive_procedure_objects() {
@@ -325,6 +382,7 @@ void *primitive_procedure_objects() {
     element_t ele14 = construct_point_element(make_primitive_procedure((void *)ne_impl));
     element_t ele15 = construct_point_element(make_primitive_procedure((void *)le_impl));
     element_t ele16 = construct_point_element(make_primitive_procedure((void *)ge_impl));
-    element_t elements[] = {ele1, ele2, ele3, ele4, ele5, ele6, ele7, ele8, ele9, ele10, ele11, ele12, ele13, ele14, ele15, ele16};
-    return list(16, elements);
+    element_t ele17 = construct_point_element(make_primitive_procedure((void *)read_impl));
+    element_t elements[] = {ele1, ele2, ele3, ele4, ele5, ele6, ele7, ele8, ele9, ele10, ele11, ele12, ele13, ele14, ele15, ele16, ele17};
+    return list(17, elements);
 }

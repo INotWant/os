@@ -5,11 +5,6 @@
 #include "../libc/utils.h"
 #include "../libc/string.h"
 
-/**
- * 对输入字符串的处理，键入回车后回调此方法
- */
-extern void user_input(char *input);
-
 #define BACKSPACE   0x0E
 #define ENTER       0x1C
 #define LSHIFT      0x2A
@@ -32,6 +27,8 @@ extern void user_input(char *input);
 #define SHIFT_LABRACKET     0x33    /* < */
 #define SHIFT_RABRACKET     0x34    /* > */
 #define SHIFT_QUESTION      0x35    /* ? */
+
+input_handler_fp input_handler;
 
 #define BUFFER_SIZE 256
 static char key_buffer[BUFFER_SIZE];
@@ -102,7 +99,7 @@ static void keyboard_callback(registers_t regs) {
         }
     } else if (scancode == ENTER) {
         kprint("\n");
-        user_input(key_buffer); /* kernel-controlled function */
+        input_handler(key_buffer);
         key_buffer[0] = '\0';
     } else if (scancode == LSHIFT || scancode == RSHIFT)
         has_shift = 1;
@@ -115,7 +112,7 @@ static void keyboard_callback(registers_t regs) {
         char str[2] = {letter, '\0'};
         size_t len = strlen(key_buffer);
         if (len == BUFFER_SIZE - 1)
-            key_buffer[BUFFER_SIZE - 1] = letter;
+            key_buffer[BUFFER_SIZE - 2] = letter;   /* 若缓冲区已满，则把新的放在倒数第二位置（最后放 '\0'） */
         else
             append(key_buffer, letter);
         kprint(str);
@@ -126,14 +123,15 @@ static void keyboard_callback(registers_t regs) {
 
 int input_len() {
     int i = 0;
-    for (; i < BUFFER_SIZE; i++)
+    for (; i < BUFFER_SIZE - 1; i++)
         if (key_buffer[i] == '\0')
             return i;
     return -1;
 }
 
-void init_keyboard() {
+void init_keyboard(input_handler_fp default_input_handler) {
     update_interrupt_handler(IRQ1, keyboard_callback);
+    input_handler = default_input_handler;
 }
 
 void clear_key_buffer() {

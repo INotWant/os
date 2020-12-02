@@ -2,6 +2,7 @@
 #define ISR_H
 
 #include <stdint.h>
+#include "../drivers/keyboard.h"
 
 /** 用于 CPU 异常的中断服务例程（内中断） **/
 extern void isr0();
@@ -92,7 +93,7 @@ void interrupt_install();
 /**
  * 安装外中断处理函数
  */
-void irq_install();
+void irq_install(input_handler_fp default_input_handler);
 
 /**
  * 处理内中断的默认逻辑

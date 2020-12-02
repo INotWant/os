@@ -1,7 +1,9 @@
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
 
-void init_keyboard();
+typedef void (*input_handler_fp)(char *);
+
+void init_keyboard(input_handler_fp default_input_handler);
 
 /**
  * 返回当前输入缓冲区已保存的字符数量
@@ -23,5 +25,10 @@ void enable_keyboard();
  * 关闭键盘
  */
 void disable_keyboard();
+
+/**
+ * 对输入字符串进行处理的函数指针
+ */
+extern input_handler_fp input_handler;
 
 #endif
