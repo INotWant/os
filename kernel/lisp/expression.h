@@ -238,4 +238,11 @@ void *let_body(void *exp);
  */
 void *let_to_lambda_call(void *exp);
 
+/**
+ * 判断是否是 list 表达式
+ * 
+ * list: (list <arg_1> ... <arg_n>)
+ */
+uint8_t is_list(void *exp);
+
 #endif

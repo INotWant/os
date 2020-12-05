@@ -168,6 +168,7 @@ void *cons(element_t *car_element_point, element_t *cdr_element_point) {
     if (is_point_pair_and_not_null(cdr_element_point))
         push(cdr_element_point);
     if (index >= PAIR_MAX_NUMBER - STACK_RESERVE_NUMBER) {      /* 去除为 stack 保留的空间 */
+        kprint("\nGC\n"); // TODO debug
         garbage_collection();
         if (index >= PAIR_MAX_NUMBER - STACK_RESERVE_NUMBER)    /* GC 后仍无空间 */
             return 0;
@@ -289,7 +290,7 @@ void print_element(element_t ele) {
         float2str(ele.val.fval, str, 6);
         kprint(str);
     } else if (ele.type == STRING_T) {
-        kprint(ele.val.point);
+        kprint((char *)ele.val.point);
     } else if (ele.type == NON_EXIST_T) {
         kprint("non exist!");
     } else if (ele.type == POINT_PAIR_T) {

@@ -12,7 +12,8 @@
 #include "lisp/lisp.h"
 #include "lisp/procedure.h"
 
-#include "../test/test.h"
+#include "../evaluator/lisp_evaluator.h"
+// #include "../test/test.h"
 
 /* 存放表达式 */
 static char *exp_str;
@@ -40,6 +41,10 @@ void kernel_main() {
     enable_keyboard();
 
     exp_str = (char *)memory_malloc(EXP_MAX_LEN);
+
+    /* 加载 lisp 求值器 */
+    load_lisp_evaluator();
+
     kprint("Lisp is the best language!");
     kprint("\n> ");
 }

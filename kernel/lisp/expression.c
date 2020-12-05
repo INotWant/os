@@ -334,3 +334,7 @@ void *let_to_lambda_call(void *exp) {
     pop();
     return cons(&lambda_ele, &exps_ele);
 }
+
+uint8_t is_list(void *exp) {
+    return tagged(exp, "list");
+}

@@ -73,7 +73,9 @@ element_t eval(void *exp, void *env) {
         return eval(let_to_lambda_call(exp), env);
     else if (is_begin(exp))
         return eval_sequence(begin_actions(exp), env);
-    else if (is_application(exp)){
+    else if (is_list(exp))
+        return construct_point_element(eval_real_parameters(operands(exp), env));
+    else if (is_application(exp)) {
         element_t op_ele = eval(operator(exp), env);
         if (op_ele.type != POINT_PAIR_T || op_ele.val.point == 0)
             eval_error_handler(PROC_NON_EXIST);

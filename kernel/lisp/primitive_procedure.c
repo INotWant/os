@@ -8,6 +8,7 @@
 #include "../../drivers/keyboard.h"
 #include "../../libc/string.h"
 #include "../../libc/mem.h"
+#include "../../libc/utils.h"
 
 static uint8_t is_number(element_t *ep) {
     uint8_t type = ep->type;
@@ -126,6 +127,18 @@ static element_t car_impl(void *args) {
     return car(ele.val.point);
 }
 
+// set-car!
+static element_t set_car_impl(void *args) {
+    if (get_args_number(args) != 2)
+        eval_error_handler(WNP_SET_CAR);
+    element_t ele1 = car(args);
+    element_t ele2 = cadr(args);
+    if (ele1.type != POINT_PAIR_T || ele1.val.point == 0)
+        eval_error_handler(UT_SET_CAR);
+    set_car(ele1.val.point, &ele2);
+    return OK;
+}
+
 // 'cdr'
 static element_t cdr_impl(void *args) {
     if (get_args_number(args) != 1)
@@ -134,6 +147,18 @@ static element_t cdr_impl(void *args) {
     if (ele.type != POINT_PAIR_T)
         eval_error_handler(UT_CDR);
     return cdr(ele.val.point);
+}
+
+// set-cdr!
+static element_t set_cdr_impl(void *args) {
+    if (get_args_number(args) != 2)
+        eval_error_handler(WNP_SET_CDR);
+    element_t ele1 = car(args);
+    element_t ele2 = cadr(args);
+    if (ele1.type != POINT_PAIR_T || ele1.val.point == 0)
+        eval_error_handler(UT_SET_CDR);
+    set_cdr(ele1.val.point, &ele2);
+    return OK;
 }
 
 // 'null?'
@@ -322,8 +347,8 @@ static element_t read_impl(void *args) {
     clear_key_buffer();
     flag = 1;
 
-    asm volatile("sti");
     while (flag == 1) {
+        asm volatile("sti");
         asm volatile("hlt");
     }
 
@@ -341,6 +366,96 @@ static element_t read_impl(void *args) {
         eval_error_handler(ERR_TMCL_READ);
     else if (flag == -3)
         eval_error_handler(ERR_TMCE_READ);
+}
+
+// number?
+static element_t is_number_impl(void *args) {
+    if (get_args_number(args) != 1)
+        eval_error_handler(WNP_IS_NUMBER);
+    element_t ele = car(args);
+    if (ele.type == INTEGER_T || ele.type == FLOAT_T)
+        return TRUE;
+    return FALSE;
+}
+
+// string?
+static element_t is_string_impl(void *args) {
+    if (get_args_number(args) != 1)
+        eval_error_handler(WNP_IS_STRING);
+    element_t ele = car(args);
+    if (ele.type == STRING_T && *(char *)(ele.val.point) == '"')
+        return TRUE;
+    return FALSE;
+}
+
+// symbol?
+static element_t is_symbol_impl(void *args) {
+    if (get_args_number(args) != 1)
+        eval_error_handler(WNP_IS_SYMBOL);
+    element_t ele = car(args);
+    if (ele.type == STRING_T) {
+        char c = *(char *)(ele.val.point);
+        if (c != '"' && c != '\'')
+            return TRUE;
+    }
+    return FALSE;
+}
+
+// quoted?
+static element_t is_quoted_impl(void *args) {
+    if (get_args_number(args) != 1)
+        eval_error_handler(WNP_IS_QUOTED);
+    element_t ele = car(args);
+    if (ele.type == STRING_T) {
+        char c = *(char *)(ele.val.point);
+        if (c == '\'')
+            return TRUE;
+    }
+    return FALSE;
+}
+
+// pair?
+static element_t is_pair_impl(void *args) {
+    if (get_args_number(args) != 1)
+        eval_error_handler(WNP_IS_PAIR);
+    element_t ele = car(args);
+    if (ele.type == POINT_PAIR_T)
+        return TRUE;
+    return FALSE;
+}
+
+// eq?
+static element_t is_eq_impl(void *args) {
+    if (get_args_number(args) != 2)
+        eval_error_handler(WNP_IS_EQ);
+    element_t ele1 = car(args);
+    element_t ele2 = cadr(args);
+    if (ele1.type != ele2.type)
+        return FALSE;
+    if (ele1.type == STRING_T)
+        return strcmp((char *)ele1.val.point, (char *)ele2.val.point) == 0 ? TRUE : FALSE;
+    return eq_impl(args);
+}
+
+// apply -- 注：其第二个参数应为一个表，表示参数
+static element_t apply_impl(void *args) {
+    if (get_args_number(args) != 2)
+        eval_error_handler(WNP_APPLY);
+    element_t ele1 = car(args);
+    element_t ele2 = cadr(args);
+    if (ele1.type != POINT_PAIR_T || ele1.val.point == 0 || ele2.type != POINT_PAIR_T)
+        eval_error_handler(UT_APPLY);
+    void *procedure = ele1.val.point;
+    if (!is_primitive_procedure(procedure))
+        eval_error_handler(UT_APPLY);
+    return primitive_procedure_impl(procedure)(ele2.val.point);
+}
+
+// newline
+static element_t newline_impl(void *args) {
+    kprint("\n");
+    UNUSED(args);
+    return ZERO_POINT;  /* 代表无返回结果 */
 }
 
 void *primitive_procedure_names() {
@@ -361,8 +476,20 @@ void *primitive_procedure_names() {
     element_t ele15 = construct_string_element("<=");
     element_t ele16 = construct_string_element(">=");
     element_t ele17 = construct_string_element("read");
-    element_t elements[] = {ele1, ele2, ele3, ele4, ele5, ele6, ele7, ele8, ele9, ele10, ele11, ele12, ele13, ele14, ele15, ele16, ele17};
-    return list(17, elements);
+    element_t ele18 = construct_string_element("number?");
+    element_t ele19 = construct_string_element("string?");
+    element_t ele20 = construct_string_element("symbol?");
+    element_t ele21 = construct_string_element("quoted?");
+    element_t ele22 = construct_string_element("pair?");
+    element_t ele23 = construct_string_element("eq?");      /* 先判类型是否一致，若不一致直接 FALSE ，再去判是否相等 */
+    element_t ele24 = construct_string_element("set-car!");
+    element_t ele25 = construct_string_element("set-cdr!");
+    element_t ele26 = construct_string_element("apply");
+    element_t ele27 = construct_string_element("newline");
+    element_t elements[] = {ele1, ele2, ele3, ele4, ele5, ele6, ele7, ele8, ele9, ele10, ele11, ele12, ele13,
+                            ele14, ele15, ele16, ele17, ele18, ele19, ele20, ele21, ele22, ele23, ele24, ele25, ele26, ele27};
+    /* 注：此处 list 第二参数已超 18。但因在初始化时运行故认为运行期间不会引起 GC */
+    return list(27, elements);
 }
 
 void *primitive_procedure_objects() {
@@ -383,6 +510,18 @@ void *primitive_procedure_objects() {
     element_t ele15 = construct_point_element(make_primitive_procedure((void *)le_impl));
     element_t ele16 = construct_point_element(make_primitive_procedure((void *)ge_impl));
     element_t ele17 = construct_point_element(make_primitive_procedure((void *)read_impl));
-    element_t elements[] = {ele1, ele2, ele3, ele4, ele5, ele6, ele7, ele8, ele9, ele10, ele11, ele12, ele13, ele14, ele15, ele16, ele17};
-    return list(17, elements);
+    element_t ele18 = construct_point_element(make_primitive_procedure((void *)is_number_impl));
+    element_t ele19 = construct_point_element(make_primitive_procedure((void *)is_string_impl));
+    element_t ele20 = construct_point_element(make_primitive_procedure((void *)is_symbol_impl));
+    element_t ele21 = construct_point_element(make_primitive_procedure((void *)is_quoted_impl));
+    element_t ele22 = construct_point_element(make_primitive_procedure((void *)is_pair_impl));
+    element_t ele23 = construct_point_element(make_primitive_procedure((void *)is_eq_impl));
+    element_t ele24 = construct_point_element(make_primitive_procedure((void *)set_car_impl));
+    element_t ele25 = construct_point_element(make_primitive_procedure((void *)set_cdr_impl));
+    element_t ele26 = construct_point_element(make_primitive_procedure((void *)apply_impl));
+    element_t ele27 = construct_point_element(make_primitive_procedure((void *)newline_impl));
+    element_t elements[] = {ele1, ele2, ele3, ele4, ele5, ele6, ele7, ele8, ele9, ele10, ele11, ele12, ele13,
+                            ele14, ele15, ele16, ele17, ele18, ele19, ele20, ele21, ele22, ele23, ele24, ele25, ele26, ele27};
+    /* 注：此处 list 第二参数已超 18；而且此函数中存在 [在建] 指针。但因在初始化时运行故认为运行期间不会引起 GC */
+    return list(27, elements);
 }

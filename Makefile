@@ -1,5 +1,7 @@
-C_SOURCES = $(wildcard kernel/*.c kernel/lisp/*.c drivers/*.c cpu/*.c libc/*.c test/*.c)
-HEADERS = $(wildcard kernel/*.h kernel/lisp/*.h drivers/*.h cpu/*.h libc/*.h test/*.h)
+# C_SOURCES = $(wildcard kernel/*.c kernel/lisp/*.c evaluator/*.c drivers/*.c cpu/*.c libc/*.c test/*.c)
+# HEADERS = $(wildcard kernel/*.h kernel/lisp/*.h evaluator/*.h drivers/*.h cpu/*.h libc/*.h test/*.h)
+C_SOURCES = $(wildcard kernel/*.c kernel/lisp/*.c evaluator/*.c drivers/*.c cpu/*.c libc/*.c)
+HEADERS = $(wildcard kernel/*.h kernel/lisp/*.h evaluator/*.h drivers/*.h cpu/*.h libc/*.h)
 OBJ = ${C_SOURCES:.c=.o cpu/interrupt.o} 
 
 CC = i386-elf-gcc
@@ -37,7 +39,7 @@ debug: os-image.bin kernel.elf
 
 clean:
 	rm -rf *.bin *.dis *.o os-image.bin *.elf
-	rm -rf kernel/*.o kernel/lisp/*.o boot/*.bin drivers/*.o boot/*.o cpu/*.o libc/*.o test/*.o
+	rm -rf kernel/*.o kernel/lisp/*.o evaluator/*.o boot/*.bin drivers/*.o boot/*.o cpu/*.o libc/*.o test/*.o
 
 stop:
 	ps | grep qemu-system-i386 | sed  '/grep/d' | awk '{print $$1}' | xargs kill

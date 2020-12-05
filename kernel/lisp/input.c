@@ -16,7 +16,9 @@ static int locate_quote(char *str, size_t start, size_t len) {
             return -1;
         return ++i;
     }
-    while(i < len && (is_alphabet(str[i]) || is_digital(str[i])))
+    while(i < len && (is_alphabet(str[i]) || is_digital(str[i]) ||
+        str[i] == '!' || str[i] == '?' || str[i] == '=' ||
+        str[i] == '+' || str[i] == '-' || str[i] == '*' || str[i] == '/'))
         ++i;
     return i;
 }
