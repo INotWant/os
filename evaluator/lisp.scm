@@ -33,6 +33,9 @@
 (define (caadr p)
     (car (cadr p)))
 
+(define (cdadr p)
+    (cdr (cadr p)))
+
 (define (cdddr p)
     (cdr (cddr p)))
 
@@ -71,7 +74,7 @@
     (symbol? (car exp)))
 
 (define (text-of-quotation exp)
-    (car exp))
+    (quotation-text exp)
 
 (define (assignment? exp)
     (tagged-list-caar? exp 'set!))
@@ -90,14 +93,16 @@
 
 (define (definition-value exp)
     (if (symbol? (caadr exp))
-        (caadr exp)
+        (caddr exp)
         (make-lambda (cdadr exp)
                      (cddr exp))))
 
 (define (lambda? exp) (tagged-list-caar? exp 'lambda))
 
 (define (lambda-parameters-helper parameters)
-    (cons (caar parameters) (lambda-parameters-helper (cdr parameters))))
+    (if (null? parameters)
+        '()
+        (cons (caar parameters) (lambda-parameters-helper (cdr parameters)))))
 
 (define (lambda-parameters exp) (lambda-parameters-helper (cadr exp)))
 
@@ -165,7 +170,7 @@
            ((application? exp)
             (apply (eval (operator exp) env)
                    (list-of-values (operands exp) env)))
-            (else (display "Unknown expression type -- EVAL"))))
+            (else (display "Unknown expression type -- EVAL") (newline))))
 
 (define apply-in-underlying-scheme apply)
 
@@ -178,7 +183,7 @@
                     (procedure-parameters procedure)
                     arguments
                     (procedure-environment procedure))))
-        (else (display "Unknown procedure type -- APPLY"))))
+        (else (display "Unknown procedure type -- APPLY") (newline))))
 
 (define (list-of-values exps env)
     (if (no-operands? exps)
@@ -242,8 +247,8 @@
     (if (= (length vars) (length vals))
         (cons (make-frame vars vals) base-env)
         (if (< (length vars) (length vals))
-            (display "Too many arguments supplied")
-            (display "Too few arguments supplied"))))
+            (begin (display "Too many arguments supplied") (newline))
+            (begin (display "Too few arguments supplied") (newline)))))
 
 (define (lookup-variable-value var env)
     (define (env-loop env)
@@ -252,7 +257,7 @@
                   ((eq? var (car vars)) (car vals))
                   (else (scan (cdr vars) (cdr vals)))))
         (if (eq? env the-empty-environment)
-            (display "Unbound variable")
+            (begin (display "Unbound variable") (newline))
             (let ((frame (first-frame env)))
                 (scan (frame-variables frame)
                       (frame-values frame)))))
@@ -265,7 +270,7 @@
                 ((eq? var (car vars)) (set-car! vals val))
                 (else (scan (cdr vars) (cdr vals)))))
         (if (eq? env the-empty-environment)
-            (display "Unbound variable -- SET!")
+            (begin (display "Unbound variable -- SET!") (newline))
             (let ((frame (first-frame env)))
                 (scan (frame-variables frame)
                     (frame-values frame)))))

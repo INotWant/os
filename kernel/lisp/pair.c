@@ -100,6 +100,17 @@ void pair_destory() {
     index = 0;
 }
 
+static void assign_element(element_t *element_point, char *ep){
+    uint8_t type = GET_TYPE(ep);
+    element_point->type = type;
+    if (type == INTEGER_T)
+        element_point->val.ival = GET_INT_VAL(ep);
+    else if (type == FLOAT_T)
+        element_point->val.fval = GET_FLOAT_VAL(ep);
+    else if (type == STRING_T || type == POINT_PAIR_T)
+        element_point->val.point = GET_POINT_VAL(ep);
+}
+
 static void assign_ep(char *ep, element_t *element_point) {
     uint8_t type = element_point->type;
     PUT_TYPE(ep, type);
@@ -109,6 +120,22 @@ static void assign_ep(char *ep, element_t *element_point) {
         PUT_FLOAT_VAL(ep, element_point->val.fval);
     else if (type == STRING_T || type == POINT_PAIR_T)
         PUT_POINT_VAL(ep, element_point->val.point);
+}
+
+/* 处理 GC 后遗症：局部引用未得到更新 */
+void *replace_broken_pair_point(void *pair_point) {
+    if (pair_point == 0)
+        return 0;
+    element_t element;
+    assign_element(&element, GET_CAR_EP(pair_point));
+    if (element.type == BROKEN_HEART_T)  
+        pair_point = GET_POINT_VAL(GET_CDR_EP(pair_point));
+    return pair_point;
+}
+
+void replace_broken_pair_point_element(element_t *element_point) {
+    if (element_point->type == POINT_PAIR_T)
+        element_point->val.point = replace_broken_pair_point(element_point->val.point);
 }
 
 static void gc_helper(char *ep, char **root_p) {
@@ -162,6 +189,9 @@ static uint8_t is_point_pair_and_not_null(element_t *element_point) {
 }
 
 void *cons(element_t *car_element_point, element_t *cdr_element_point) {
+    replace_broken_pair_point_element(car_element_point);
+    replace_broken_pair_point_element(cdr_element_point);
+
     /* 保存参数 -- for GC of pair */
     if (is_point_pair_and_not_null(car_element_point))
         push(car_element_point);
@@ -170,8 +200,14 @@ void *cons(element_t *car_element_point, element_t *cdr_element_point) {
     if (index >= PAIR_MAX_NUMBER - STACK_RESERVE_NUMBER) {      /* 去除为 stack 保留的空间 */
         kprint("\nGC\n"); // TODO debug
         garbage_collection();
-        if (index >= PAIR_MAX_NUMBER - STACK_RESERVE_NUMBER)    /* GC 后仍无空间 */
+
+        replace_broken_pair_point_element(car_element_point);
+        replace_broken_pair_point_element(cdr_element_point);
+
+        if (index >= PAIR_MAX_NUMBER - STACK_RESERVE_NUMBER) {  /* GC 后仍无空间 */
+            kprint("\nGC ERR!\n");
             return 0;
+        }    
     }
     void *ret = cons_helper(car_element_point, cdr_element_point);
     /* 恢复参数 */
@@ -183,39 +219,36 @@ void *cons(element_t *car_element_point, element_t *cdr_element_point) {
 }
 
 void *cons_for_stack(element_t *car_element_point, element_t *cdr_element_point) {
+    replace_broken_pair_point_element(car_element_point);
+    replace_broken_pair_point_element(cdr_element_point);
     if (index == PAIR_MAX_NUMBER)   /* 不进行 GC */
         return 0;                   // TODO 报错退出
     return cons_helper(car_element_point, cdr_element_point);
 }
 
-static void assign_element(element_t *element_point, char *ep){
-    uint8_t type = GET_TYPE(ep);
-    element_point->type = type;
-    if (type == INTEGER_T)
-        element_point->val.ival = GET_INT_VAL(ep);
-    else if (type == FLOAT_T)
-        element_point->val.fval = GET_FLOAT_VAL(ep);
-    else if (type == STRING_T || type == POINT_PAIR_T)
-        element_point->val.point = GET_POINT_VAL(ep);
-}
-
 element_t car(void *pair_point) {
+    pair_point = replace_broken_pair_point(pair_point);
     element_t element;
     assign_element(&element, GET_CAR_EP(pair_point));
     return element;
 }
 
 element_t cdr(void *pair_point) {
+    pair_point = replace_broken_pair_point(pair_point);
     element_t element;
     assign_element(&element, GET_CDR_EP(pair_point));
     return element;
 }
 
 void set_car(void *pair_point, element_t *element_point) {
+    pair_point = replace_broken_pair_point(pair_point);
+    replace_broken_pair_point_element(element_point);
     assign_ep(GET_CAR_EP(pair_point), element_point);
 }
 
 void set_cdr(void *pair_point, element_t *element_point) {
+    pair_point = replace_broken_pair_point(pair_point);
+    replace_broken_pair_point_element(element_point);
     assign_ep(GET_CDR_EP(pair_point), element_point);
 }
 
@@ -290,7 +323,11 @@ void print_element(element_t ele) {
         float2str(ele.val.fval, str, 6);
         kprint(str);
     } else if (ele.type == STRING_T) {
-        kprint((char *)ele.val.point);
+        char *str = (char *)ele.val.point;
+        if (str[0] == '\'')
+            kprint(str + 1);
+        else
+            kprint(str);
     } else if (ele.type == NON_EXIST_T) {
         kprint("non exist!");
     } else if (ele.type == POINT_PAIR_T) {

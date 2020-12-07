@@ -43,11 +43,11 @@ uint8_t is_primitive_procedure(void *p) {
 void *make_primitive_procedure(void *pf) {
     /* ("primitive" pf) */
     element_t ele1 = PRIMITIVE;
-    element_t ele2 = construct_point_element(pf);   /* 注：此处指针指向的是函数，而不是序对 */
+    element_t ele2 = construct_integer_element((int32_t)pf);   /* 注：此处指针指向的是函数，而不是序对 */
     element_t elements[] = {ele1, ele2};
     return list(2, elements);
 }
 
 primitive_pf primitive_procedure_impl(void *p) {
-    return cadr(p).val.point;
+    return (primitive_pf)cadr(p).val.ival;
 }

@@ -178,25 +178,7 @@ static element_t is_null_impl(void *args) {
 static element_t display_impl(void *args) {
     if (get_args_number(args) != 1)
         eval_error_handler(WNP_DISPLAY);
-    element_t ele = car(args);
-    if (ele.type == STRING_T)
-        kprint(ele.val.point);
-    else if (ele.type == INTEGER_T){
-        char *tp = (char *)memory_malloc(12);
-        int2str(ele.val.ival, tp);
-        kprint(tp);
-        memory_free(tp);
-    } else if (ele.type == FLOAT_T) {
-        char *tp = (char *)memory_malloc(20);
-        float2str(ele.val.fval, tp, 6);
-        kprint(tp);
-        memory_free(tp);
-    } else if (ele.type == POINT_PAIR_T) {
-        char *tp = (char *)memory_malloc(11);
-        int2hex_str((uint32_t)ele.val.point, tp);
-        kprint(tp);
-        memory_free(tp);
-    }
+    print_element(car(args));
     return ZERO_POINT;  /* 代表无返回结果 */
 }
 
@@ -414,6 +396,21 @@ static element_t is_quoted_impl(void *args) {
     return FALSE;
 }
 
+static element_t quotation_text_impl(void *args) {
+    if (get_args_number(args) != 1)
+        eval_error_handler(WNP_QUOTATION_TEXT);
+    element_t ele = car(args);
+    if (ele.type != STRING_T || *((char *)ele.val.point) != '\'')
+        eval_error_handler(UT_QUOTATION_TEXT);
+    char *p = (char *)ele.val.point + 1;
+    element_t ret_ele;
+    ret_ele.val.point = p;
+    int i = 0;
+    if (p[i] == '(' && p[i + 1] == ')')     /* '() 表空表 */
+        return ZERO_POINT;
+    return ret_ele;
+}
+
 // pair?
 static element_t is_pair_impl(void *args) {
     if (get_args_number(args) != 1)
@@ -480,16 +477,17 @@ void *primitive_procedure_names() {
     element_t ele19 = construct_string_element("string?");
     element_t ele20 = construct_string_element("symbol?");
     element_t ele21 = construct_string_element("quoted?");
-    element_t ele22 = construct_string_element("pair?");
-    element_t ele23 = construct_string_element("eq?");      /* 先判类型是否一致，若不一致直接 FALSE ，再去判是否相等 */
-    element_t ele24 = construct_string_element("set-car!");
-    element_t ele25 = construct_string_element("set-cdr!");
-    element_t ele26 = construct_string_element("apply");
-    element_t ele27 = construct_string_element("newline");
-    element_t elements[] = {ele1, ele2, ele3, ele4, ele5, ele6, ele7, ele8, ele9, ele10, ele11, ele12, ele13,
-                            ele14, ele15, ele16, ele17, ele18, ele19, ele20, ele21, ele22, ele23, ele24, ele25, ele26, ele27};
+    element_t ele22 = construct_string_element("quotation-text");   /* 由于涉及引号表达式的底层存储，所以提供此基础操作 */
+    element_t ele23 = construct_string_element("pair?");
+    element_t ele24 = construct_string_element("eq?");              /* 先判类型是否一致，若不一致直接 FALSE ，再去判是否相等 */
+    element_t ele25 = construct_string_element("set-car!");
+    element_t ele26 = construct_string_element("set-cdr!");
+    element_t ele27 = construct_string_element("apply");
+    element_t ele28 = construct_string_element("newline");
+    element_t elements[] = {ele1, ele2, ele3, ele4, ele5, ele6, ele7, ele8, ele9, ele10, ele11, ele12, ele13, ele14,
+                            ele15, ele16, ele17, ele18, ele19, ele20, ele21, ele22, ele23, ele24, ele25, ele26, ele27, ele28};
     /* 注：此处 list 第二参数已超 18。但因在初始化时运行故认为运行期间不会引起 GC */
-    return list(27, elements);
+    return list(28, elements);
 }
 
 void *primitive_procedure_objects() {
@@ -514,14 +512,15 @@ void *primitive_procedure_objects() {
     element_t ele19 = construct_point_element(make_primitive_procedure((void *)is_string_impl));
     element_t ele20 = construct_point_element(make_primitive_procedure((void *)is_symbol_impl));
     element_t ele21 = construct_point_element(make_primitive_procedure((void *)is_quoted_impl));
-    element_t ele22 = construct_point_element(make_primitive_procedure((void *)is_pair_impl));
-    element_t ele23 = construct_point_element(make_primitive_procedure((void *)is_eq_impl));
-    element_t ele24 = construct_point_element(make_primitive_procedure((void *)set_car_impl));
-    element_t ele25 = construct_point_element(make_primitive_procedure((void *)set_cdr_impl));
-    element_t ele26 = construct_point_element(make_primitive_procedure((void *)apply_impl));
-    element_t ele27 = construct_point_element(make_primitive_procedure((void *)newline_impl));
-    element_t elements[] = {ele1, ele2, ele3, ele4, ele5, ele6, ele7, ele8, ele9, ele10, ele11, ele12, ele13,
-                            ele14, ele15, ele16, ele17, ele18, ele19, ele20, ele21, ele22, ele23, ele24, ele25, ele26, ele27};
+    element_t ele22 = construct_point_element(make_primitive_procedure((void *)quotation_text_impl));
+    element_t ele23 = construct_point_element(make_primitive_procedure((void *)is_pair_impl));
+    element_t ele24 = construct_point_element(make_primitive_procedure((void *)is_eq_impl));
+    element_t ele25 = construct_point_element(make_primitive_procedure((void *)set_car_impl));
+    element_t ele26 = construct_point_element(make_primitive_procedure((void *)set_cdr_impl));
+    element_t ele27 = construct_point_element(make_primitive_procedure((void *)apply_impl));
+    element_t ele28 = construct_point_element(make_primitive_procedure((void *)newline_impl));
+    element_t elements[] = {ele1, ele2, ele3, ele4, ele5, ele6, ele7, ele8, ele9, ele10, ele11, ele12, ele13, ele14,
+                            ele15, ele16, ele17, ele18, ele19, ele20, ele21, ele22, ele23, ele24, ele25, ele26, ele27, ele28};
     /* 注：此处 list 第二参数已超 18；而且此函数中存在 [在建] 指针。但因在初始化时运行故认为运行期间不会引起 GC */
-    return list(27, elements);
+    return list(28, elements);
 }
