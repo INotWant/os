@@ -308,7 +308,9 @@
           (list 'car car)
           (list 'cdr cdr)
           (list 'cons cons)
-          (list 'null? null?)))
+          (list 'null? null?)
+          (list 'display display)
+          (list 'newline newline)))
 
 (define (primitive-procedure-names)
     (map car primitive-procedures))

@@ -22,7 +22,7 @@ init_pm:
     mov fs, ax
     mov gs, ax              ; 4. 更新各段寄存器
 
-    mov ebp, 0x7b00
+    mov ebp, 0x9f000
     mov esp, ebp            ; 5. 更新堆栈指针
 
     call BEGIN_PM           ; 6. 调用开始程序

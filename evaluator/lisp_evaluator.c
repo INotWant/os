@@ -83,7 +83,7 @@ static char *exps[] = {
     "(define (setup-environment) (let ((initial-env (extend-environment (primitive-procedure-names) (primitive-procedure-objects) the-empty-environment))) initial-env))",
     "(define (primitive-procedure? proc) (tagged-list-car? proc 'primitive))",
     "(define (primitive-implementation proc) (cadr proc))",
-    "(define primitive-procedures (list (list '+ +) (list '- -) (list '* *) (list '/ /) (list '= =) (list 'car car) (list 'cdr cdr) (list 'cons cons) (list 'null? null?)))",
+    "(define primitive-procedures (list (list '+ +) (list '- -) (list '* *) (list '/ /) (list '= =) (list 'car car) (list 'cdr cdr) (list 'cons cons) (list 'null? null?) (list 'display display) (list 'newline newline)))",
     "(define (primitive-procedure-names) (map car primitive-procedures))",
     "(define (primitive-procedure-objects) (map (lambda (proc) (list 'primitive (cadr proc))) primitive-procedures))",
     "(define (apply-primitive-procedure proc args) (apply-in-underlying-scheme (primitive-implementation proc) args))",

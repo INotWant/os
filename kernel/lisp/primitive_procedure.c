@@ -336,7 +336,7 @@ static element_t read_impl(void *args) {
 
     input_handler = default_input_handler;
     if (flag == 0) {
-        element_t ele = construct_point_element(save_str_to_pair(exp_str, exp_len));
+        element_t ele = construct_point_element(save_str_to_pair_no_update_exp(exp_str, exp_len));
         memory_free(exp_str);
         return ele;
     }

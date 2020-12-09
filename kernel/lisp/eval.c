@@ -5,6 +5,7 @@
 #include "procedure.h"
 #include "apply.h"
 #include "constant.h"
+#include "lisp.h"
 #include "../kernel.h"
 #include "../../drivers/screen.h"
 #include "../../drivers/keyboard.h"
@@ -93,8 +94,9 @@ void eval_error_handler(element_t reasion) {
     /* 清空 exp 键盘输入缓存 */
     clear_exp();
     clear_key_buffer();
-    /* 恢复 root 表，无需管理 env ，其将在 lisp_exec 中恢复 */
+    /* 恢复 root 表 */
     update_exp_point(0);
+    update_env_point(env);
     update_stack_top_point(0);
     /* 恢复 ebp esp esi edi */
     asm volatile("movl %0, %%ebp" ::"r"(EBP_CONSTANT));

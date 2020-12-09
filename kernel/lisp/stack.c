@@ -11,7 +11,7 @@ uint8_t push(element_t *element_point) {
         return 0;
     stack_top_point = pp;
     /* 更新 root 表中的 stack_top_point -- for GC of pair */
-    update_stack_top_point(&stack_top_point);
+    update_stack_top_point(stack_top_point);
     return 1;
 }
 
@@ -22,6 +22,6 @@ element_t pop() {
     element_t element = car(stack_top_point);
     stack_top_point = cdr(stack_top_point).val.point;
     /* 更新 root 表中的 stack_top_point -- for GC of pair */
-    update_stack_top_point(&stack_top_point);
+    update_stack_top_point(stack_top_point);
     return element;
 }

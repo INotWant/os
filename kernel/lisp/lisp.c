@@ -3,7 +3,7 @@
 #include "env.h"
 #include "eval.h"
 
-static void *env;
+void *env;
 
 void lisp_init() {
     void *pp_names = primitive_procedure_names();
@@ -14,7 +14,5 @@ void lisp_init() {
 }
 
 element_t lisp_exec(void *exp) {
-    /* 防止因上次执行失败未能恢复，重新更新 */
-    update_env_point(env);
     return eval(exp, env);
 }

@@ -1,6 +1,7 @@
 #include "pair.h"
 #include "stack.h"
 #include "procedure.h"
+#include "lisp.h"
 #include "../../libc/mem.h"
 #include "../../libc/string.h"
 #include "../../drivers/screen.h"
@@ -138,7 +139,7 @@ void replace_broken_pair_point_element(element_t *element_point) {
         element_point->val.point = replace_broken_pair_point(element_point->val.point);
 }
 
-static void gc_helper(char *ep, char **root_p) {
+static void gc_helper(char *ep, char **free_p) {
     uint8_t type = GET_TYPE(ep);
     if (type == POINT_PAIR_T && GET_POINT_VAL(ep) != 0) {  /* 指向序对，指针为 0 时表空表 */
         void *pp = GET_POINT_VAL(ep);
@@ -148,23 +149,25 @@ static void gc_helper(char *ep, char **root_p) {
         if (pp_car_type == BROKEN_HEART_T) {
             PUT_POINT_VAL(ep, GET_POINT_VAL(pp_cdr_ep));
         } else {
-            char *free = *root_p;
+            char *free = *free_p;
             memory_copy((uint8_t *)pp, (uint8_t *)free, PAIR_SIZE);
             PUT_TYPE(pp_car_ep, BROKEN_HEART_T);
             PUT_POINT_VAL(pp_cdr_ep, free);
             PUT_POINT_VAL(ep, free);
-            *root_p = free + PAIR_SIZE;
+            if (pp == env)      /* 更新根环境指针 */
+                env = free;
+            *free_p = free + PAIR_SIZE;
         }
     }
 }
 
 // 采用停止复制算法
 static void garbage_collection() {
-    memory_copy((uint8_t *)root, (uint8_t *)new_start_point, PAIR_SIZE);
+    memory_copy((uint8_t *)root, (uint8_t *)new_start_point, PAIR_SIZE * 3);
     root = new_start_point;
 
     char *scan = root;
-    char *free = new_start_point + PAIR_SIZE;
+    char *free = new_start_point + PAIR_SIZE * 3;
     while(scan != free) {
         gc_helper(GET_CAR_EP(scan), &free);
         gc_helper(GET_CDR_EP(scan), &free);
@@ -198,12 +201,11 @@ void *cons(element_t *car_element_point, element_t *cdr_element_point) {
     if (is_point_pair_and_not_null(cdr_element_point))
         push(cdr_element_point);
     if (index >= PAIR_MAX_NUMBER - STACK_RESERVE_NUMBER) {      /* 去除为 stack 保留的空间 */
-        kprint("\nGC\n"); // TODO debug
+        // kprint("\nGC==>start\n"); // TODO debug
         garbage_collection();
-
+        // kprint("\nend<==GC\n");
         replace_broken_pair_point_element(car_element_point);
         replace_broken_pair_point_element(cdr_element_point);
-
         if (index >= PAIR_MAX_NUMBER - STACK_RESERVE_NUMBER) {  /* GC 后仍无空间 */
             kprint("\nGC ERR!\n");
             return 0;
@@ -252,11 +254,11 @@ void set_cdr(void *pair_point, element_t *element_point) {
     assign_ep(GET_CDR_EP(pair_point), element_point);
 }
 
-static void *list_help(size_t num, element_t *ep) {
+static void *list_helper(size_t num, element_t *ep) {
     if (num == 0)
         return 0;
     element_t car_element = *ep;
-    element_t cdr_element = construct_point_element(list_help(num - 1, ep + 1));
+    element_t cdr_element = construct_point_element(list_helper(num - 1, ep + 1));
     return cons(&car_element, &cdr_element);
 }
 
@@ -271,7 +273,7 @@ void *list(size_t num, element_t *ep) {
         }
         ++i;
     }
-    void *ret = list_help(num, ep);
+    void *ret = list_helper(num, ep);
     i = 0;
     /* 恢复 */
     while (i++ < size)

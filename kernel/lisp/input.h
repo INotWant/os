@@ -45,5 +45,10 @@ int is_legal(char *str, size_t len);
  */
 void *save_str_to_pair(char *str, size_t len);
 
+/**
+ * save_str_to_pair 函数的无更新序对池 root 表版本
+ */
+void *save_str_to_pair_no_update_exp(char *str, size_t len);
+
 #endif
 

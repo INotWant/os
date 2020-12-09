@@ -70,7 +70,7 @@
  * 此值至少为 24 ((18(list方法最大18次push)+2(cons方法最大2次push))(预留的push空间)+3(root表)+1(可用数目))
  * 注：push 指的是 stack.c 中的 push 方法
  */
-#define PAIR_MAX_NUMBER         10240
+#define PAIR_MAX_NUMBER         4096000
 #define STACK_RESERVE_NUMBER    20
 
 /** 定义序对中元素类型对应的标号 **/

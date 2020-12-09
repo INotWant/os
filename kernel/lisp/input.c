@@ -229,6 +229,10 @@ static void *save_str_to_pair_helper(char *str, size_t start, size_t end) {
     }
 }
 
+void *save_str_to_pair_no_update_exp(char *str, size_t len) {
+    return save_str_to_pair_helper(str, 0, len - 1);
+}
+
 void *save_str_to_pair(char *str, size_t len) {
     /* 清楚 root 表中的 exp 指针 */
     update_exp_point(0);

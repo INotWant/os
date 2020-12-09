@@ -6,6 +6,9 @@
 /** 表达式最大长度 **/
 #define EXP_MAX_LEN 2048
 
+/** （根）环境指针 **/
+extern void *env;
+
 /**
  * 初始化 lisp 解释器
  */
