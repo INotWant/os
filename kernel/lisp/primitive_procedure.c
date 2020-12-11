@@ -404,6 +404,7 @@ static element_t quotation_text_impl(void *args) {
         eval_error_handler(UT_QUOTATION_TEXT);
     char *p = (char *)ele.val.point + 1;
     element_t ret_ele;
+    ret_ele.type = STRING_T;
     ret_ele.val.point = p;
     int i = 0;
     if (p[i] == '(' && p[i + 1] == ')')     /* '() 表空表 */

@@ -158,7 +158,7 @@
 (define (eval exp env)
     (cond ((self-evaluating? exp) (car exp))
            ((variable? exp) (lookup-variable-value (car exp) env))
-           ((quoted? (car exp)) (text-of-quotation exp))
+           ((quoted? (car exp)) (text-of-quotation (car exp)))
            ((assignment? exp) (eval-assignment exp env))
            ((definition? exp) (eval-definition exp env))
            ((if? exp) (eval-if exp env))
