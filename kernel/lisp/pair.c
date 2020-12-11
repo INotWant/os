@@ -201,9 +201,9 @@ void *cons(element_t *car_element_point, element_t *cdr_element_point) {
     if (is_point_pair_and_not_null(cdr_element_point))
         push(cdr_element_point);
     if (index >= PAIR_MAX_NUMBER - STACK_RESERVE_NUMBER) {      /* 去除为 stack 保留的空间 */
-        // kprint("\nGC==>start\n"); // TODO debug
+        kprint("\nGC==>start\n"); // TODO debug
         garbage_collection();
-        // kprint("\nend<==GC\n");
+        kprint("\nend<==GC\n");
         replace_broken_pair_point_element(car_element_point);
         replace_broken_pair_point_element(cdr_element_point);
         if (index >= PAIR_MAX_NUMBER - STACK_RESERVE_NUMBER) {  /* GC 后仍无空间 */

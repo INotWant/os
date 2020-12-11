@@ -1,7 +1,11 @@
-# C_SOURCES = $(wildcard kernel/*.c kernel/lisp/*.c evaluator/*.c drivers/*.c cpu/*.c libc/*.c test/*.c)
-# HEADERS = $(wildcard kernel/*.h kernel/lisp/*.h evaluator/*.h drivers/*.h cpu/*.h libc/*.h test/*.h)
-C_SOURCES = $(wildcard kernel/*.c kernel/lisp/*.c evaluator/*.c drivers/*.c cpu/*.c libc/*.c)
-HEADERS = $(wildcard kernel/*.h kernel/lisp/*.h evaluator/*.h drivers/*.h cpu/*.h libc/*.h)
+# C_SOURCES = $(wildcard kernel/*.c kernel/lisp/*.c evaluator/-.c drivers/*.c cpu/*.c libc/*.c test/*.c)
+# HEADERS = $(wildcard kernel/*.h kernel/lisp/*.h evaluator/-.h drivers/*.h cpu/*.h libc/*.h test/*.h)
+### lisp.asm
+# C_SOURCES = $(wildcard kernel/*.c kernel/lisp/*.c evaluator/lisp_evaluator.c drivers/*.c cpu/*.c libc/*.c)
+# HEADERS = $(wildcard kernel/*.h kernel/lisp/*.h evaluator/lisp_evaluator.h drivers/*.h cpu/*.h libc/*.h)
+### lisp_analyzing.scm
+C_SOURCES = $(wildcard kernel/*.c kernel/lisp/*.c evaluator/lisp_analyzing_evaluator.c drivers/*.c cpu/*.c libc/*.c)
+HEADERS = $(wildcard kernel/*.h kernel/lisp/*.h evaluator/lisp_analyzing_evaluator.h drivers/*.h cpu/*.h libc/*.h)
 OBJ = ${C_SOURCES:.c=.o cpu/interrupt.o} 
 
 CC = i386-elf-gcc
