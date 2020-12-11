@@ -70,6 +70,22 @@ typedef struct {
 
 root 表中的 `exp` 指针指的范围能否缩小，以便可 GC 更大空间
 
+#### 10. GC 要点
+
+1. 判存活对象 -- 考虑不全 **(在建)** **(参数)**
+2. 更新 -- 更新那些局部引用变量，它们指向可存活的对象，但那些对象现在已经移动了位置 -- 之前未考虑到，导致 **非常大 BUG**
+    - 解决方案：从 `car` `cdr` `set_car` `set_cdr` `cons` 上下手，即从选择函数、改变函数上下手 -- 要求 GC 不能过于频繁
+
+#### 11. GC 导致 input_handler 发生变化 ？？ --> ✅
+
+update_stack_top_point 使用错误造成
+
+#### 12. 在一次调用中（调用栈较深）若出现多于两次的 GC ，则可能导致错误
+
+问题根源：GC 要点2
+
+缓解方案：把语法分析与执行相分离，使得语法分析只执行一次
+
 ## 少点什么
 
 1. 什么是设计？为什么选这种设计？缺乏设计的合理性实验验证
@@ -80,7 +96,9 @@ root 表中的 `exp` 指针指的范围能否缩小，以便可 GC 更大空间
 
 ## TODO
 
-1. 添加 `cond` `let` `read` 支持
-2. 自举验证
-3. GC 验证
+1. 添加 `cond` `let` `read` 支持 ✅
+2. 自举验证 ✅
+3. GC 验证 ✅
 4. 如何终止（比如，Stack Overflow）？
+5. OS’s Kernel ---- optimize lisp (separation of parsing and execution)
+6. OS’s Kernel ---- lisp compiler
