@@ -9,6 +9,7 @@ HEADERS = $(wildcard kernel/*.h kernel/lisp/*.h evaluator/lisp_analyzing_evaluat
 OBJ = ${C_SOURCES:.c=.o cpu/interrupt.o} 
 
 CC = i386-elf-gcc
+LD = i386-elf-ld
 GDB = i386-elf-gdb
 # -g: Use debugging symbols in gcc
 CFLAGS = -g -ffreestanding -Wall -Wextra -fno-exceptions -m32
@@ -20,10 +21,10 @@ os-image.bin: boot/boot_sec.bin kernel.bin
 	cat $^ > $@
 
 kernel.bin: boot/kernel_entry.o ${OBJ}
-	i386-elf-ld -o $@ -Ttext 0x7e00 $^ --oformat binary
+	${LD} -m elf_i386 -o $@ -Ttext 0x7e00 $^ --oformat binary
 
 kernel.elf: boot/kernel_entry.o ${OBJ}
-	i386-elf-ld -o $@ -Ttext 0x7e00 $^
+	${LD} -m elf_i386 -o $@ -Ttext 0x7e00 $^
 
 run: os-image.bin
 	qemu-system-i386 -curses -hda os-image.bin

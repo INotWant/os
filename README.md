@@ -44,7 +44,8 @@
 - 安装交叉编译器
 
   ```shell
-  brew tap nativeos/i386-elf-toolchain
+  # brew tap nativeos/i386-elf-toolchain
+  brew tap adisarip/homebrew-i386-elf-toolchain
   
   brew install i386-elf-binutils i386-elf-gcc i386-elf-gdb
   ```
