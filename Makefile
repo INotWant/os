@@ -1,17 +1,17 @@
-# C_SOURCES = $(wildcard kernel/*.c kernel/lisp/*.c evaluator/-.c drivers/*.c cpu/*.c libc/*.c test/*.c)
-# HEADERS = $(wildcard kernel/*.h kernel/lisp/*.h evaluator/-.h drivers/*.h cpu/*.h libc/*.h test/*.h)
-### lisp.asm
-# C_SOURCES = $(wildcard kernel/*.c kernel/lisp/*.c evaluator/lisp_evaluator.c drivers/*.c cpu/*.c libc/*.c)
-# HEADERS = $(wildcard kernel/*.h kernel/lisp/*.h evaluator/lisp_evaluator.h drivers/*.h cpu/*.h libc/*.h)
-### lisp_analyzing.scm
-C_SOURCES = $(wildcard kernel/*.c kernel/lisp/*.c evaluator/lisp_analyzing_evaluator.c drivers/*.c cpu/*.c libc/*.c)
-HEADERS = $(wildcard kernel/*.h kernel/lisp/*.h evaluator/lisp_analyzing_evaluator.h drivers/*.h cpu/*.h libc/*.h)
+C_SOURCES = $(wildcard kernel/*.c drivers/*.c cpu/*.c libc/*.c)
+ASM_SOURCES = $(wildcard kernel/lisp_asm/*.asm test/lisp_asm/*.asm)
+HEADERS = $(wildcard kernel/*.h drivers/*.h cpu/*.h libc/*.h)
 OBJ = ${C_SOURCES:.c=.o cpu/interrupt.o} 
+A_OBJ = ${ASM_SOURCES:.asm=.o}
 
 CC = i386-elf-gcc
+LD = i386-elf-ld
 GDB = i386-elf-gdb
-# -g: Use debugging symbols in gcc
-CFLAGS = -g -ffreestanding -Wall -Wextra -fno-exceptions -m32
+
+CFLAGS = $(CFLAG)
+CFLAGS += -g -ffreestanding -Wall -Wextra -fno-exceptions -m32
+
+A_FLAGS = $(AFLAG)
 
 all: os-image.bin kernel.elf
 
@@ -19,11 +19,11 @@ all: os-image.bin kernel.elf
 os-image.bin: boot/boot_sec.bin kernel.bin
 	cat $^ > $@
 
-kernel.bin: boot/kernel_entry.o ${OBJ}
-	i386-elf-ld -o $@ -Ttext 0x7e00 $^ --oformat binary
+kernel.bin: boot/kernel_entry.o ${OBJ} ${A_OBJ}
+	${LD} -m elf_i386 -o $@ -Ttext 0x7e00 $^ --oformat binary
 
-kernel.elf: boot/kernel_entry.o ${OBJ}
-	i386-elf-ld -o $@ -Ttext 0x7e00 $^
+kernel.elf: boot/kernel_entry.o ${OBJ} ${A_OBJ}
+	${LD} -m elf_i386 -o $@ -Ttext 0x7e00 $^
 
 run: os-image.bin
 	qemu-system-i386 -curses -hda os-image.bin
@@ -36,14 +36,14 @@ debug: os-image.bin kernel.elf
 	${CC} ${CFLAGS} -ffreestanding -c $< -o $@
 
 %.o: %.asm
-	nasm $< -f elf -o $@
+	nasm $(A_FLAGS) $< -f elf -o $@
 
 %.bin: %.asm
-	nasm $< -f bin -o $@
+	nasm $(A_FLAGS) $< -f bin -o $@
 
 clean:
 	rm -rf *.bin *.dis *.o os-image.bin *.elf
-	rm -rf kernel/*.o kernel/lisp/*.o evaluator/*.o boot/*.bin drivers/*.o boot/*.o cpu/*.o libc/*.o test/*.o
+	rm -rf kernel/*.o kernel/lisp/*.o kernel/lisp_asm/*.o evaluator/*.o boot/*.bin drivers/*.o boot/*.o cpu/*.o libc/*.o test/*.o test/lisp_asm/*.o
 
 stop:
 	ps | grep qemu-system-i386 | sed  '/grep/d' | awk '{print $$1}' | xargs kill
