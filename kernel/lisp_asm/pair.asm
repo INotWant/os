@@ -1,7 +1,7 @@
 [bits 32]
 
 global ELE_SIZE, INTEGER_T, FLOAT_T, STRING_T, PAIR_POINT_T
-global pair_pool_init, cons, car, cdr, caar, cadr, cddr, cdar, caddr, set_car, set_cdr
+global pair_pool_init, cons, car, cdr, caar, cadr, cddr, cdar, caddr, cdddr, caadr, cdadr, set_car, set_cdr
 
 extern EXP_OFFSET, ENV_OFFSET, PROC_OFFSET, ARGL_OFFSET, UENV_OFFSET, STACK_OFFSET
 
@@ -456,6 +456,36 @@ caddr:
     call cddr
     mov ecx, ebx
     call car
+    pop ecx
+    ret
+
+;;; params: ecx -> address
+;;; return: al -> type, ebx -> value
+caadr:
+    push ecx
+    call cadr
+    mov ecx, ebx
+    call car
+    pop ecx
+    ret
+
+;;; params: ecx -> address
+;;; return: al -> type, ebx -> value
+cdadr:
+    push ecx
+    call cadr
+    mov ecx, ebx
+    call cdr
+    pop ecx
+    ret
+
+;;; params: ecx -> address
+;;; return: al -> type, ebx -> value
+cdddr:
+    push ecx
+    call cddr
+    mov ecx, ebx
+    call cdr
     pop ecx
     ret
 
