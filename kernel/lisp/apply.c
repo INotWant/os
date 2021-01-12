@@ -15,10 +15,7 @@ element_t apply(void *procedure, void *arguments) {
         void *exps = procedure_body(procedure);
         /* 更新 root 表中的 env 指针 -- for GC of pair */
         update_env_point(new_env);
-        element_t ret_ele = eval_sequence(exps, new_env);
-        /* 恢复 env 指针 */
-        update_env_point(old_env);
-        return ret_ele;
+        return eval_sequence(exps, new_env);
     } else 
         eval_error_handler(UNKNOWN_PROC_TYPE);
 }
