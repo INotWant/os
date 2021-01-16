@@ -301,5 +301,3 @@ eval_real_parameters:
             call restore_ebx
             mov eax, ecx
             ret
-
-;;; // TODO 1) 处理 栈满问题

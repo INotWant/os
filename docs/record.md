@@ -100,11 +100,13 @@ update_stack_top_point 使用错误造成
 2. 自举验证 ✅
 3. GC 验证 ✅
 4. 如何终止（比如，Stack Overflow）？
-5. OS’s Kernel ---- optimize lisp (separation of parsing and execution)
+    - 需要结合 段 ，暂缓
+5. OS’s Kernel ---- optimize lisp (separation of parsing and execution) ✅
     - 上层优化 `(fib 10)` --> 由 10s 变为 5s
     - 下层优化 --> 需要 C 语言支持闭包
         - 尝试了 GCC 对 C 的扩展 `嵌套函数` --> 其不是真正的闭包
         - Objective-C 的扩展 `Blocks` 真正实现了闭包
         - 放弃
-6. 重构？（完全使用汇编实现 Lisp 解释器）
+6. 重构？（完全使用汇编实现 Lisp 解释器）✅
+    - [设计草图（是真的草）](https://www.yuque.com/docs/share/2521f8a7-09aa-4f30-b64f-c48c27452c45?# 《设计 —— 序对池》) --> 设计真的需要摸着石头过河？
 7. OS’s Kernel ---- lisp compiler

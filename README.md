@@ -1,39 +1,28 @@
-## OS Toy
+## OS & Lisp
 
-**或许每个程序员都有一个操作系统梦！**
+**每位程序员都有自己的 “操作系统”(os) 和 “语言”(lisp) 梦！**
 
 ### 简介
 
-定制的开具动画（还看得过去，gif 有失真）-->
+实现一个简单的操作系统，只需此操作系统支持 `Lisp` 语言。
+
+开机动画：
 
 ![](./docs/开机界面.gif)
 
-开机后不能傻傻地发呆，跑个 `Lisp` 解释器吧（对 Lisp 情有独钟）-->
+开机后启动 `Lisp` 解释器：
 
 ![](./docs/演示1.png)
 
-`Lisp` 能递归了，有高级函数了，还需怎样才能让它有一丢丢的不平凡，让它可自举吧（揪着自己的辫子举起自己）-->
+`Lisp` 可自举（第一版已实现，即 *lisp_c分支*）：
 
 ![](./docs/演示2.png)
-
-至此，它可（约）等价于 **图灵机**。
-
-不过，它华丽的一切都归属于 **计算之美**！
-
-### 目标
-
-- [x] OS's BootLoader
-- [x] OS’s Kernel ---- screen | interrupt (keyboard timer) | memory management | boot animation
-- [x] OS’s Kernel ---- lisp interpreter
-- [x] OS’s Kernel ---- support lisp bootstrap
-- [x] OS’s Kernel ---- optimize lisp (separation of parsing and execution)
-- [ ] OS’s Kernel ---- lisp compiler
 
 ### 运行
 
 ##### 环境
 
-本 OS 只针对 `i386` 架构，所以需要交叉编译器、模拟器环境。
+只针对 `i386` 架构，需要交叉编译器、模拟器环境。
 
 下面以 **Mac** 为例：
 
@@ -55,18 +44,23 @@
 
 ### 一些说明
 
-启动流程 -->
+分支：
+
+	- `lisp_c` ，此分支使用 C 实现 Lisp，最终 Lisp 已能自举。但是，在执行 Lisp 表达式过程中若出现多于一次的 GC 就极有可能出错（GC 的问题）
+	- `lisp_asm` ，此分支使用汇编实现 Lisp，解决 `lisp_c` 中 GC 存在的问题，目前 Lisp 还不能自举（还差一小步）
+
+启动流程：
 
 ![](./docs/启动流程.png)
 
-有点啥 -->
+内容：
 
-- 第 0 扇区存什么
+- 第 0 扇区
 - `GDT` `IDT`
 - CPU 与 IO 通信：`MMIO` `PMIO`
 - 定时器的原生实现
 - 内存管理 -- 分离空闲链表
-- “序对池”实现
+- “序对池” 实现
 - 序对池的垃圾回收 GC —— 停止复制算法
   - 存活对象 —— root 表
   -  如何更新“老”指针
@@ -74,12 +68,18 @@
 - 一种错误机制 —— 汇编想怎么跳就怎么跳
 - 字符动画
 
+### 目标
+
+- [x] OS's BootLoader
+- [x] OS’s Kernel ---- screen | interrupt (keyboard timer) | memory management | boot animation
+- [x] Lisp ---- lisp interpreter
+- [x] Lisp ---- enable lisp *bootstrapping*
+- [x] Lisp ---- optimize lisp (separation of parsing and execution)
+- [x] Lisp ---- in order to solve the problems of GC, use assembly to implement Lisp interpreter
+- [ ] Lisp ---- lisp compiler
+
 ### 参考
 
 - [os-tutorial](https://github.com/cfenollosa/os-tutorial)
 - [OSDev](http://www.osdev.org/)
 - [SICP](https://book.douban.com/subject/1148282/)
-
-#### 最后
-
-**最后是忘不了的星哥和他的实验室！**
