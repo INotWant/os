@@ -24,6 +24,7 @@ global FREE_OFFSET
 PAIR_MAX_NUM equ 9
 %endif
 CONS_ARGS_SAVE_INDEX equ 6
+RESERVED_SPACE_FOR_LIST equ 8
 
 ;; define the type of element
 INTEGER_T equ 0x0
@@ -211,7 +212,7 @@ gc:
     ; 5. scan
     gc_loop:
         ; if there is room in pool
-        cmp word [FREE_OFFSET], PAIR_MAX_NUM
+        cmp word [FREE_OFFSET], PAIR_MAX_NUM - RESERVED_SPACE_FOR_LIST
         je cons_no_space
         ; cmp scan & free
         mov ax, [SCAN_OFFSET]
@@ -282,7 +283,7 @@ gc:
 ;;; broke: eax, ecx
 cons:
     ; 1. enough space?
-    cmp word [FREE_OFFSET], PAIR_MAX_NUM
+    cmp word [FREE_OFFSET], PAIR_MAX_NUM - RESERVED_SPACE_FOR_LIST
     jb cons_no_gc
     cons_gc:
         ; [2] GC
@@ -341,7 +342,7 @@ cons:
 
 NO_SPACE_CONS db "no space -- cons", 0
 
-;;; construct list
+;;; construct list (the maximum length is 8)
 ;;; params: non, but in stack
 ;;; return: eax -> address
 ;;; broke: all
@@ -354,8 +355,8 @@ list:
     add cx, [FREE_OFFSET]
     add ecx, eax
     ; 0.2 if there is enough space
-    cmp ecx, PAIR_MAX_NUM
-    ja list_no_space
+    cmp ecx, PAIR_MAX_NUM - RESERVED_SPACE_FOR_LIST
+    ja list_try_gc
     ; 1
     list_can:
         push eax            ; eax -> list length (note only ah)
@@ -380,20 +381,54 @@ list:
             mov eax, edx
             ret
     ; 2 no space
-    list_no_space:
-        ; clear parameters
-        list_no_space_loop:
-            cmp ah, 0
-            je list_no_space_end
-            sub ah, 1
-            pop edx
-            pop cx
-            jmp list_no_space_loop
-        list_no_space_end:
-            mov ebx, NO_SPACE_LIST
-            jmp eval_error_handler
-
-NO_SPACE_LIST db "no space -- list", 0
+    list_try_gc:
+        ; put the parameters in the reserved space
+        push eax
+        add ax, PAIR_MAX_NUM - RESERVED_SPACE_FOR_LIST - 1
+        mov bx, 0
+        mov ecx, [NEW_PP_OFFSET]
+        call compute_address    ; ecx -> the address where the last parameter is stored
+        ; save last params
+        pop eax
+        sub eax, 1
+        pop ebx
+        pop dx
+        push eax
+        mov [ecx], dl
+        mov [ecx + 1], ebx
+        mov byte [ecx + ELE_SIZE], PAIR_POINT_T
+        mov dword [ecx + ELE_SIZE + 1], 0
+        sub ecx, PAIR_SIZE
+        list_try_gc_loop:
+            pop eax
+            cmp eax, 0
+            je list_try_gc_loop_end
+            sub eax, 1
+            pop ebx
+            pop dx
+            push eax
+            mov [ecx], dl
+            mov [ecx + 1], ebx
+            mov byte [ecx + ELE_SIZE], PAIR_POINT_T
+            mov ebx, ecx
+            add ebx, PAIR_SIZE
+            mov [ecx + ELE_SIZE + 1], ebx
+            sub ecx, PAIR_SIZE
+            jmp list_try_gc_loop
+        list_try_gc_loop_end:
+            ; save "first address" to CONS_ARGS_SAVE
+            add ecx, PAIR_SIZE      ; ecx -> first address
+            mov al, PAIR_POINT_T
+            mov ebx, ecx
+            call put_1
+            ; try gc
+            ; if there is enough space, it will return
+            ; if not, it will exit in the process of GC
+            call gc
+            mov al, 1
+            call get_v
+            mov edx, eax
+            jmp list_can_end
 
 ;;; params: al -> type, ebx -> value, ecx -> address, dl -> is last
 ;;; broke: al, ebx, ecx = ecx + PAIR_SIZE
