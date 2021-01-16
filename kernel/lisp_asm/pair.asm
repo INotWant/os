@@ -1,13 +1,14 @@
 [bits 32]
 
-global ELE_SIZE, INTEGER_T, FLOAT_T, STRING_T, PAIR_POINT_T
-global pair_pool_init, cons, car, cdr, caar, cadr, cddr, cdar, caddr, cdddr, caadr, cdadr, set_car, set_cdr
+global ELE_SIZE, INTEGER_T, FLOAT_T, STRING_T, PAIR_POINT_T, FUNC_POINT_T
+global pair_pool_init, cons, car, cdr, caar, cadr, cddr, cdar, caddr, cdddr, caadr, cdadr, cadddr, set_car, set_cdr, list
 
-extern EXP_OFFSET, ENV_OFFSET, PROC_OFFSET, ARGL_OFFSET, UENV_OFFSET, STACK_OFFSET
+extern EXP_OFFSET, ENV_OFFSET, CONTINUE_OFFSET, ARGL_OFFSET, UENV_OFFSET, STACK_OFFSET
+extern eval_error_handler
 
 ; for pair pool
 NEW_PP equ 0x100000
-OLD_PP equ 0x119000
+OLD_PP equ 0x164000
 NEW_PP_OFFSET equ 0x9f01c
 OLD_PP_OFFSET equ 0x9f020
 FREE_OFFSET equ 0x9f024     ; index, 16bits
@@ -17,7 +18,7 @@ SCAN_OFFSET equ 0x9f026     ; index, 16bits
 ELE_SIZE equ 5
 PAIR_SIZE equ (ELE_SIZE * 2)
 %ifndef GC_TEST
-PAIR_MAX_NUM equ 10240
+PAIR_MAX_NUM equ 40960
 %else
 global FREE_OFFSET
 PAIR_MAX_NUM equ 9
@@ -29,7 +30,7 @@ INTEGER_T equ 0x0
 FLOAT_T equ 0x1
 STRING_T equ 0x2
 PAIR_POINT_T equ 0x3
-NON_EXIST_T equ 0xe
+FUNC_POINT_T equ 0xd
 BROKEN_HEART_T equ 0xf
 
 ;;; save 1st parameter of cons, only used by cons
@@ -53,15 +54,15 @@ put_1:
 ;;; save 2nd parameter of cons, only used by cons
 ;;; params: cl -> type, edx -> value
 put_2:
-    push ecx    ; save ecx
-    mov ecx, [NEW_PP_OFFSET]
-    add ecx, CONS_ARGS_SAVE_INDEX * PAIR_SIZE + ELE_SIZE
-    mov [ecx], cl
-    mov [ecx + 1], edx
-    add ecx, ELE_SIZE
-    mov byte [ecx], PAIR_POINT_T
-    mov dword [ecx + 1], 0
-    pop ecx     ; restore ecx
+    push ebx    ; save ecx
+    mov ebx, [NEW_PP_OFFSET]
+    add ebx, CONS_ARGS_SAVE_INDEX * PAIR_SIZE + PAIR_SIZE
+    mov [ebx], cl
+    mov [ebx + 1], edx
+    add ebx, ELE_SIZE
+    mov byte [ebx], PAIR_POINT_T
+    mov dword [ebx + 1], 0
+    pop ebx     ; restore ecx
     ret
 
 ;;; get type of the special parameter of cons
@@ -102,8 +103,9 @@ get_v:
 
 ;;; params: ax -> index, bx -> 0 or ELE_SIZE, ecx -> base address
 ;;; return: ecx
-;;; broke: eax, ebx
 compute_address:
+    push eax
+    push ebx
     push edx
     mov dx, PAIR_SIZE
     mul dx
@@ -114,6 +116,8 @@ compute_address:
     add edx, ebx
     add ecx, edx
     pop edx
+    pop ebx
+    pop eax
     ret
 
 ;;; params: al -> type, ebx -> value, ecx -> address
@@ -133,7 +137,7 @@ copy_pair:
     mov [edx + 1], ebx
     ; cdr
     mov al, [ecx + ELE_SIZE]
-    mov [ecx + ELE_SIZE], al
+    mov [edx + ELE_SIZE], al
     mov ebx, [ecx + ELE_SIZE + 1]
     mov [edx + ELE_SIZE + 1], ebx
     pop ebx
@@ -165,10 +169,10 @@ gc_helper:
         call copy_pair
         ; maintain BROKEN_HEART
         mov byte [ecx], BROKEN_HEART_T
-        mov dword [ecx + 1], edx
+        mov [ecx + 1], edx
         ; change old pair point
         pop ecx
-        mov dword [ecx + 1], edx
+        mov [ecx + 1], edx
         ; maintain FREE
         add word [FREE_OFFSET], 1
         ret
@@ -221,13 +225,12 @@ gc:
             je gc_loop_cdr
             cmp byte [ecx], PAIR_POINT_T
             jne gc_loop_cdr
-            push ax
             call gc_helper
-            pop ax
         gc_loop_cdr:    ; cdr
             ; skip if in root table(contain 'CONS_ARGS_SAVE')
-            cmp word [SCAN_OFFSET], CONS_ARGS_SAVE_INDEX
-            jbe gc_loop_n
+            mov ax, [SCAN_OFFSET]
+            cmp word ax, CONS_ARGS_SAVE_INDEX + 2
+            jb gc_loop_n
             mov bx, ELE_SIZE
             mov ecx, [NEW_PP_OFFSET]
             call compute_address
@@ -254,7 +257,7 @@ gc:
         call cdr
         mov ecx, ebx
         call car
-        mov [PROC_OFFSET], ebx
+        mov [CONTINUE_OFFSET], ebx
         ; argl
         call cdr
         mov ecx, ebx
@@ -275,7 +278,7 @@ gc:
 ;;; construct pair
 ;;; params: al -> the type of 1st element, cl -> the type of 2st element;
 ;;;         ebx -> the data of 1st element, edx -> the data of 2st element           
-;;; return: eax -> address ; 0 show no space(at this time, the value of the register is unknown)
+;;; return: eax -> address
 ;;; broke: eax, ecx
 cons:
     ; 1. enough space?
@@ -333,14 +336,68 @@ cons:
         mov edx, [eax + ELE_SIZE + 1]
         ret
     cons_no_space:
-        pop eax     ; clean 'eip' in 'stack'
-        mov eax, 0
-        ret
+        mov ebx, NO_SPACE_CONS
+        jmp eval_error_handler
 
-;;; params: ebx -> value, ecx -> address, dl -> is last
+NO_SPACE_CONS db "no space -- cons", 0
+
+;;; construct list
+;;; params: non, but in stack
+;;; return: eax -> address
+;;; broke: all
+list:
+    pop ecx                 ; save -> return address 
+    mov [CONTINUE_OFFSET], ecx
+    pop eax                 ; eax -> list length
+    ; 0.1 compute remain number
+    mov ecx, 0
+    add cx, [FREE_OFFSET]
+    add ecx, eax
+    ; 0.2 if there is enough space
+    cmp ecx, PAIR_MAX_NUM
+    ja list_no_space
+    ; 1
+    list_can:
+        push eax            ; eax -> list length (note only ah)
+        mov edx, 0          ; edx -> pre point
+        list_can_loop:
+            pop eax
+            cmp eax, 0
+            je list_can_end
+            sub eax, 1
+            pop ebx
+            pop cx
+            push eax
+            mov ax, cx
+            mov cl, PAIR_POINT_T
+            call cons
+            mov edx, eax
+            jmp list_can_loop
+        list_can_end:
+            mov eax, [CONTINUE_OFFSET]
+            mov dword [CONTINUE_OFFSET], 0
+            push eax        ; restore return address
+            mov eax, edx
+            ret
+    ; 2 no space
+    list_no_space:
+        ; clear parameters
+        list_no_space_loop:
+            cmp ah, 0
+            je list_no_space_end
+            sub ah, 1
+            pop edx
+            pop cx
+            jmp list_no_space_loop
+        list_no_space_end:
+            mov ebx, NO_SPACE_LIST
+            jmp eval_error_handler
+
+NO_SPACE_LIST db "no space -- list", 0
+
+;;; params: al -> type, ebx -> value, ecx -> address, dl -> is last
 ;;; broke: al, ebx, ecx = ecx + PAIR_SIZE
 fill_root_table_ele:
-    mov al, PAIR_POINT_T
     call put_ele
     cmp dl, 0
     je fill_root_table_ele_1
@@ -360,23 +417,29 @@ fill_root_table_ele:
 fill_root_table:
     pushad
     ; exp
+    mov al, PAIR_POINT_T
     mov ebx, [EXP_OFFSET]
     mov ecx, [NEW_PP_OFFSET]
     mov dl, 0
     call fill_root_table_ele
     ; env
+    mov al, PAIR_POINT_T
     mov ebx, [ENV_OFFSET]
     call fill_root_table_ele
-    ; proc
-    mov ebx, [PROC_OFFSET]
+    ; continue
+    mov al, INTEGER_T
+    mov ebx, [CONTINUE_OFFSET]
     call fill_root_table_ele
     ; argl
+    mov al, PAIR_POINT_T
     mov ebx, [ARGL_OFFSET]
     call fill_root_table_ele
     ; uenv
+    mov al, PAIR_POINT_T
     mov ebx, [UENV_OFFSET]
     call fill_root_table_ele
     ; stack
+    mov al, PAIR_POINT_T
     mov ebx, [STACK_OFFSET]
     call fill_root_table_ele
     ; maintaining FREE
@@ -392,6 +455,14 @@ pair_pool_init:
     ; fill root table
     call fill_root_table
     ; retain CONS_ARGS_SAVE
+    pushad
+    mov al, PAIR_POINT_T
+    mov ebx, 0
+    call put_1
+    mov cl, PAIR_POINT_T
+    mov edx, 0
+    call put_2
+    popad
     add word [FREE_OFFSET], 2
     ret
 
@@ -486,6 +557,16 @@ cdddr:
     call cddr
     mov ecx, ebx
     call cdr
+    pop ecx
+    ret
+
+;;; params: ecx -> address
+;;; return: al -> type, ebx -> value
+cadddr:
+    push ecx
+    call cdddr
+    mov ecx, ebx
+    call car
     pop ecx
     ret
 

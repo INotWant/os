@@ -1,4 +1,4 @@
-C_SOURCES = $(wildcard kernel/*.c drivers/*.c cpu/*.c libc/*.c)
+C_SOURCES = $(wildcard kernel/*.c kernel/lisp_asm/*.c drivers/*.c cpu/*.c libc/*.c)
 ASM_SOURCES = $(wildcard kernel/lisp_asm/*.asm test/lisp_asm/*.asm)
 HEADERS = $(wildcard kernel/*.h drivers/*.h cpu/*.h libc/*.h)
 OBJ = ${C_SOURCES:.c=.o cpu/interrupt.o} 

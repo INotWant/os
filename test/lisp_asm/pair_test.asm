@@ -4,7 +4,7 @@
 
 global pair_test
 
-extern EXP_OFFSET, ENV_OFFSET, PROC_OFFSET, ARGL_OFFSET, UENV_OFFSET, STACK_OFFSET
+extern EXP_OFFSET, ENV_OFFSET, CONTINUE_OFFSET, ARGL_OFFSET, UENV_OFFSET, STACK_OFFSET
 extern print_string_pm
 extern INTEGER_T, FLOAT_T, STRING_T, PAIR_POINT_T, FREE_OFFSET
 extern cons, car, cdr, set_car, set_cdr
@@ -84,7 +84,7 @@ pair_gc_test:
     ; init root table
     mov dword [EXP_OFFSET], 0
     mov dword [ENV_OFFSET], 0
-    mov dword [PROC_OFFSET], 0
+    mov dword [CONTINUE_OFFSET], 0
     mov dword [ARGL_OFFSET], 0
     mov dword [UENV_OFFSET], 0
     mov dword [STACK_OFFSET], 0

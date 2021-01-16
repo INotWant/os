@@ -26,7 +26,7 @@
 - [x] OS’s Kernel ---- screen | interrupt (keyboard timer) | memory management | boot animation
 - [x] OS’s Kernel ---- lisp interpreter
 - [x] OS’s Kernel ---- support lisp bootstrap
-- [ ] OS’s Kernel ---- optimize lisp (separation of parsing and execution)
+- [x] OS’s Kernel ---- optimize lisp (separation of parsing and execution)
 - [ ] OS’s Kernel ---- lisp compiler
 
 ### 运行

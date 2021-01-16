@@ -1,4 +1,6 @@
 [bits 32]
+
+global is_string, is_quote, is_symbol
 global is_self_eval, is_variable
 global is_quoted, text_of_quoted
 global is_assignment, assignment_variable, assignment_value
@@ -64,6 +66,8 @@ is_quote:
 ;;; params: ecx -> address of element
 ;;; return: al
 is_symbol:
+    cmp byte [ecx], STRING_T
+    jne is_symbol_false
     call is_string
     cmp al, 1
     je is_symbol_false
@@ -80,50 +84,26 @@ is_symbol:
 ;;; params: ecx -> address of exp
 ;;; return: al
 is_self_eval:
-    push ebx
-    push ecx
-    call car
-    mov ecx, ebx
     call is_number
     cmp al, 1
-    je is_self_eval_true
+    je is_self_eval_end
     call is_string
-    cmp al, 1
-    je is_self_eval_true
-    is_self_eval_false:
-        pop ecx
-        pop ebx
-        ret
-    is_self_eval_true:
-        pop ecx
-        pop ebx
+    is_self_eval_end:
         ret
 
 ;;; params: ecx -> address of exp
 ;;; return: al
 is_variable:
-    push ebx
-    push ecx
-    call car
-    mov ecx, ebx
     call is_symbol
-    pop ecx
-    pop ebx
     ret
 
 ;;; params: ecx -> address of exp
 ;;; return: al
 is_quoted:
-    push ebx
-    push ecx
-    call car
-    mov ecx, ebx
     call is_quote
-    pop ecx
-    pop ebx
     ret
 
-;;; param: eax -> address of exp
+;;; param: ecx -> address of exp
 ;;; return: al -> type, ebx -> data
 text_of_quoted:
     push ecx
@@ -162,6 +142,9 @@ tagged:
     cmp al, STRING_T
     jne tagged_false
     call str_cmp
+    cmp al, 0
+    jne tagged_false
+    mov al, 1
     jmp tagged_end
     tagged_false:
         mov al, 0
@@ -227,7 +210,7 @@ definition_variable:
         ret
 
 ;;; params: ecx -> address of exp
-;;; return: ebx -> address of exp
+;;; return: ebx -> address
 ;;; broke: all
 definition_value:
     call caadr

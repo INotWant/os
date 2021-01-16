@@ -3,7 +3,7 @@
 global env_init, lookup_var, extend_env, define_var, set_var
 
 extern ENV_OFFSET, ARGL_OFFSET
-extern cons, car, cdr, caar, cadr, set_car, set_cdr, ELE_SIZE, PAIR_POINT_T, STRING_T
+extern cons, car, cdr, caar, cadr, caddr, set_car, set_cdr, ELE_SIZE, PAIR_POINT_T, STRING_T
 extern save_p, restore_ecx
 extern str_cmp
 
@@ -65,7 +65,8 @@ lookup_var:
 
 ;;; params: [ARGL_OFFSET]
 ;;;     1st -> address of var name's table;
-;;;     2nd -> address of value's table.
+;;;     2nd -> address of value's table;
+;;;     3rd -> address of env
 ;;; return: ecx --> address of new environment
 ;;; broke: all
 extend_env:
@@ -132,15 +133,16 @@ extend_env:
             jmp extend_env_loop
         extend_env_1:
             ; 3
+            mov ecx, [ARGL_OFFSET]
+            call caddr
+            mov edx, ebx    ; edx -> env
             mov al, PAIR_POINT_T
             call restore_ecx
-            mov ebx, ecx
+            mov ebx, ecx    ; ebx -> curr env
             mov cl, PAIR_POINT_T
-            mov edx, [ENV_OFFSET]
             call cons
             ; eax -> env point
             mov ecx, eax
-            mov [ENV_OFFSET], ecx
             ret
 
 ;;; params: al --> type

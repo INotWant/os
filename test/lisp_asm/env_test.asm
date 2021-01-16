@@ -4,7 +4,7 @@
 
 global env_test
 
-extern ARGL_OFFSET
+extern ARGL_OFFSET, ENV_OFFSET
 extern lookup_var, extend_env, define_var, set_var
 extern print_string_pm
 extern cons, INTEGER_T, FLOAT_T, STRING_T, PAIR_POINT_T
@@ -23,6 +23,13 @@ env_test:
         ret
     ; test extend_env & lookup_var
     env_test_1:
+        mov al, PAIR_POINT_T
+        mov ebx, [ENV_OFFSET]
+        mov cl, PAIR_POINT_T
+        mov edx, 0
+        call cons
+        ; eax -> env point
+        mov [ARGL_OFFSET], eax
         mov al, INTEGER_T
         mov ebx, 1
         mov cl, PAIR_POINT_T
@@ -48,6 +55,7 @@ env_test:
         call cons
         mov [ARGL_OFFSET], eax
         call extend_env
+        mov [ENV_OFFSET], ecx
         mov eax, V1
         call lookup_var
         cmp byte [ecx], INTEGER_T

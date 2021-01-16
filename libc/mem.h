@@ -69,7 +69,7 @@ void memory_set(uint8_t *dest, uint8_t val, size_t len);
  */
 
 /** 内存管理的起始地址，考虑 内部布局 **/
-#define START_MEMORY_ADDRESS 0x132000
+#define START_MEMORY_ADDRESS 0x1c8000
 /** 内存管理的结束地址 **/
 #define END_MEMORY_ADDRESS 0xffffffff
 
